@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko" class="dark">
 <head>
@@ -47,35 +46,44 @@
   </script>
 
   <style>
+    /* Global +2px Scale & Lift Adjustment */
+    html {
+      font-size: 18px; /* 기본 16px 대비 +2px 상향하여 전체 rem 기반 UI 스케일 업 */
+    }
+    body {
+      transform: translateY(-2px); /* 전체 레이아웃 2px 상향 리프트 */
+      height: calc(100vh + 2px);
+    }
+
     /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: rgba(12, 16, 23, 0.8); }
     ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 9999px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.45); }
 
     /* Glass Panels */
     .panel-glass {
-      background: rgba(17, 23, 34, 0.7);
+      background: rgba(17, 23, 34, 0.78);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
     .panel-interactive {
-      background: rgba(12, 16, 23, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(12, 16, 23, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.09);
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .panel-interactive:hover {
-      border-color: rgba(99, 102, 241, 0.4);
+      border-color: rgba(99, 102, 241, 0.45);
       box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.5);
     }
 
     /* Grid Stage Canvas Background */
     .bg-checker {
-      background-size: 24px 24px;
+      background-size: 26px 26px;
       background-image: 
-        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     }
 
     /* Range Input Customization */
@@ -88,32 +96,29 @@
       filter: url('#metaball-filter');
     }
 
-    /* Shimmer Skeleton */
-    @keyframes shimmerMove {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
+    /* 3D Card Utilities */
+    .perspective-1000 {
+      perspective: 1000px;
     }
-    .shimmer-mask {
-      position: relative;
-      overflow: hidden;
+    .preserve-3d {
+      transform-style: preserve-3d;
     }
-    .shimmer-mask::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      transform: translateX(-100%);
-      background-image: linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.09) 50%,
-        rgba(255, 255, 255, 0) 100%
-      );
-      animation: shimmerMove var(--shimmer-speed, 1.6s) infinite linear;
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+
+    /* Touch interaction prevention of unwanted scroll during drag */
+    .touch-none-drag {
+      touch-action: none;
     }
 
     /* Wireframe Debug Overlay */
     .debug-wireframe * {
-      outline: 1px dashed rgba(236, 72, 153, 0.45) !important;
+      outline: 1px dashed rgba(236, 72, 153, 0.5) !important;
     }
   </style>
 </head>
@@ -123,12 +128,12 @@
   <svg class="sr-only">
     <defs>
       <filter id="metaball-filter">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+        <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
         <feColorMatrix in="blur" mode="matrix" values="
           1 0 0 0 0  
           0 1 0 0 0  
           0 0 1 0 0  
-          0 0 0 19 -9" result="goo" />
+          0 0 0 21 -9" result="goo" />
         <feComposite in="SourceGraphic" in2="goo" operator="atop" />
       </filter>
     </defs>
@@ -137,10 +142,16 @@
   <!-- ======================================================== -->
   <!-- 1. TOP GNB & MASTER CONTROL BAR                          -->
   <!-- ======================================================== -->
-  <header class="h-14 border-b border-white/[0.08] bg-dark-900/90 backdrop-blur-md px-4 flex items-center justify-between shrink-0 z-40">
-    <!-- Logo & Quick Switcher -->
-    <div class="flex items-center gap-4">
-      <div class="flex items-center gap-2.5">
+  <header class="h-14 border-b border-white/[0.08] bg-dark-900/95 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between shrink-0 z-40">
+    <!-- Logo & Mobile Drawer Triggers -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Mobile/Tablet Left Catalog Drawer Button -->
+      <button onclick="toggleMobileDrawer('catalog')" class="lg:hidden p-2 rounded-lg bg-dark-850 hover:bg-dark-800 border border-white/10 text-slate-200 flex items-center gap-1.5 text-xs">
+        <i data-lucide="menu" class="w-4 h-4 text-accent-500"></i>
+        <span class="hidden sm:inline font-medium">카탈로그</span>
+      </button>
+
+      <div class="flex items-center gap-2">
         <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-accent-600 via-indigo-500 to-accent-cyan p-[1.5px] shadow-lg shadow-indigo-500/20">
           <div class="w-full h-full bg-dark-950 rounded-[7px] flex items-center justify-center">
             <i data-lucide="orbit" class="w-4 h-4 text-accent-cyan animate-spin" style="animation-duration: 12s;"></i>
@@ -149,13 +160,13 @@
         <div>
           <div class="flex items-center gap-1.5">
             <span class="font-display font-bold text-sm tracking-wide text-white">MotionLab</span>
-            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Sandbox OS</span>
+            <span class="hidden md:inline-block text-[11px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">v2.0 Touch</span>
           </div>
         </div>
       </div>
 
       <!-- Quick Command Search Trigger -->
-      <button onclick="toggleCommandPalette(true)" class="hidden md:flex items-center gap-2 px-3 py-1 rounded-md bg-dark-850 hover:bg-dark-800 border border-white/10 text-xs text-slate-400 hover:text-slate-200 transition">
+      <button onclick="toggleCommandPalette(true)" class="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-dark-850 hover:bg-dark-800 border border-white/10 text-xs text-slate-400 hover:text-slate-200 transition">
         <i data-lucide="search" class="w-3.5 h-3.5"></i>
         <span>애니메이션 검색...</span>
         <kbd class="px-1.5 py-0.5 rounded bg-dark-950 border border-white/10 text-[10px] font-mono text-slate-400">Cmd+K</kbd>
@@ -163,70 +174,80 @@
     </div>
 
     <!-- Playback Engine & Time-scaling -->
-    <div class="flex items-center gap-2 sm:gap-3">
+    <div class="flex items-center gap-1.5 sm:gap-2.5">
       <!-- Play / Pause / Step Controls -->
       <div class="flex items-center bg-dark-850 rounded-lg p-0.5 border border-white/10">
         <button id="btnPlayPause" onclick="toggleGlobalPlay()" class="p-1.5 rounded-md hover:bg-white/10 text-slate-300 hover:text-white transition" title="재생 / 일시정지 (Space)">
           <i data-lucide="pause" id="iconPlayPause" class="w-4 h-4 text-emerald-400"></i>
         </button>
-        <button onclick="stepFrame(-1)" class="p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-white transition" title="1프레임 뒤로 ([)">
+        <button onclick="stepFrame(-1)" class="hidden sm:inline-flex p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-white transition" title="프레임 뒤로 ([)">
           <i data-lucide="skip-back" class="w-3.5 h-3.5"></i>
         </button>
-        <button onclick="stepFrame(1)" class="p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-white transition" title="1프레임 앞으로 (])">
+        <button onclick="stepFrame(1)" class="hidden sm:inline-flex p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-white transition" title="프레임 앞으로 (])">
           <i data-lucide="skip-forward" class="w-3.5 h-3.5"></i>
         </button>
-        <button onclick="restartActiveMotion()" class="p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-white transition" title="처음부터 다시 트리거">
+        <button onclick="restartActiveMotion()" class="p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-white transition" title="다시 트리거">
           <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
         </button>
       </div>
 
-      <!-- Time-Scale Speed Multiplier (Slow Motion) -->
-      <div class="flex items-center gap-1 bg-dark-850 px-2 py-1 rounded-lg border border-white/10 text-xs">
-        <i data-lucide="gauge" class="w-3.5 h-3.5 text-accent-cyan"></i>
-        <select id="timeScaleSelect" onchange="setTimeScale(this.value)" class="bg-transparent text-slate-300 font-mono text-xs focus:outline-none cursor-pointer">
-          <option value="0.1" class="bg-dark-900">0.1x (초슬로우)</option>
-          <option value="0.25" class="bg-dark-900">0.25x</option>
+      <!-- Time-Scale Speed Multiplier -->
+      <div class="flex items-center gap-1 bg-dark-850 px-2 py-1.5 rounded-lg border border-white/10 text-xs">
+        <i data-lucide="gauge" class="w-3.5 h-3.5 text-accent-cyan hidden sm:inline"></i>
+        <select id="timeScaleSelect" onchange="setTimeScale(this.value)" class="bg-transparent text-slate-200 font-mono text-xs focus:outline-none cursor-pointer">
+          <option value="0.2" class="bg-dark-900">0.2x</option>
           <option value="0.5" class="bg-dark-900">0.5x</option>
-          <option value="1.0" class="bg-dark-900" selected>1.0x (표준)</option>
+          <option value="1.0" class="bg-dark-900" selected>1.0x</option>
           <option value="1.5" class="bg-dark-900">1.5x</option>
-          <option value="2.0" class="bg-dark-900">2.0x (배속)</option>
+          <option value="2.0" class="bg-dark-900">2.0x</option>
         </select>
       </div>
 
-      <!-- View Mode Switcher: Focus | A/B Split | Matrix Grid -->
-      <div class="hidden sm:flex items-center bg-dark-850 rounded-lg p-0.5 border border-white/10">
-        <button onclick="setViewMode('focus')" id="viewBtn-focus" class="px-2.5 py-1 rounded-md text-xs font-medium transition bg-accent-600 text-white shadow-sm flex items-center gap-1.5">
-          <i data-lucide="crosshair" class="w-3.5 h-3.5"></i> 단일 집중
+      <!-- View Mode Switcher (Desktop/Tablet) -->
+      <div class="hidden md:flex items-center bg-dark-850 rounded-lg p-0.5 border border-white/10">
+        <button onclick="setViewMode('focus')" id="viewBtn-focus" class="px-2.5 py-1 rounded-md text-xs font-medium transition bg-accent-600 text-white shadow-sm flex items-center gap-1">
+          <i data-lucide="crosshair" class="w-3.5 h-3.5"></i> <span>단일</span>
         </button>
-        <button onclick="setViewMode('split')" id="viewBtn-split" class="px-2.5 py-1 rounded-md text-xs font-medium transition text-slate-400 hover:text-white flex items-center gap-1.5">
-          <i data-lucide="columns-2" class="w-3.5 h-3.5"></i> A/B 비교
+        <button onclick="setViewMode('split')" id="viewBtn-split" class="px-2.5 py-1 rounded-md text-xs font-medium transition text-slate-400 hover:text-white flex items-center gap-1">
+          <i data-lucide="columns-2" class="w-3.5 h-3.5"></i> <span>A/B 비교</span>
         </button>
-        <button onclick="setViewMode('matrix')" id="viewBtn-matrix" class="px-2.5 py-1 rounded-md text-xs font-medium transition text-slate-400 hover:text-white flex items-center gap-1.5">
-          <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> 매트릭스 그리드
+        <button onclick="setViewMode('matrix')" id="viewBtn-matrix" class="px-2.5 py-1 rounded-md text-xs font-medium transition text-slate-400 hover:text-white flex items-center gap-1">
+          <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> <span>그리드</span>
         </button>
       </div>
 
-      <!-- Utilities: Wireframe / Sound / Help -->
-      <div class="flex items-center gap-1 border-l border-white/10 pl-2">
-        <button id="wireframeToggleBtn" onclick="toggleWireframeOverlay()" class="p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-pink-400 transition" title="바운딩박스/레이아웃 와이어프레임 디버거">
+      <!-- Utilities & Mobile Right Inspector Trigger -->
+      <div class="flex items-center gap-1 border-l border-white/10 pl-1.5 sm:pl-2">
+        <button onclick="toggleCommandPalette(true)" class="xl:hidden p-1.5 rounded-md hover:bg-white/10 text-slate-300" title="검색">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </button>
+        <button id="wireframeToggleBtn" onclick="toggleWireframeOverlay()" class="hidden sm:inline-flex p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-pink-400 transition" title="와이어프레임 디버거">
           <i data-lucide="box-select" class="w-4 h-4"></i>
         </button>
-        <button id="soundToggleBtn" onclick="toggleAudioEngine()" class="p-1.5 rounded-md hover:bg-white/10 text-emerald-400 hover:text-white transition" title="인터랙션 사운드 피드백 토글">
+        <button id="soundToggleBtn" onclick="toggleAudioEngine()" class="p-1.5 rounded-md hover:bg-white/10 text-emerald-400 hover:text-white transition" title="사운드 피드백 토글">
           <i data-lucide="volume-2" id="soundIcon" class="w-4 h-4"></i>
+        </button>
+        <!-- Mobile/Tablet Right Inspector Drawer Button -->
+        <button onclick="toggleMobileDrawer('inspector')" class="lg:hidden p-2 rounded-lg bg-accent-600/20 hover:bg-accent-600/30 border border-accent-500/40 text-indigo-300 flex items-center gap-1 text-xs">
+          <i data-lucide="sliders" class="w-4 h-4"></i>
+          <span class="hidden sm:inline font-medium">튜너</span>
         </button>
       </div>
     </div>
   </header>
 
   <!-- ======================================================== -->
-  <!-- 2. MAIN 3-COLUMN WORKSPACE                               -->
+  <!-- 2. MAIN WORKSPACE (RESPONSIVE DRAWERS + STAGE)           -->
   <!-- ======================================================== -->
   <div class="flex-1 flex overflow-hidden relative">
 
+    <!-- Mobile Backdrop Overlay -->
+    <div id="mobileDrawerBackdrop" onclick="closeAllMobileDrawers()" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-30 hidden lg:hidden transition-opacity"></div>
+
     <!-- ------------------------------------------------------ -->
-    <!-- LEFT SIDEBAR: 8-DOMAIN NAVIGATOR & TREE (310px)        -->
+    <!-- LEFT SIDEBAR: 8-DOMAIN NAVIGATOR (Responsive Drawer)   -->
     <!-- ------------------------------------------------------ -->
-    <aside class="w-72 sm:w-80 border-r border-white/[0.08] bg-dark-900/60 backdrop-blur-md flex flex-col shrink-0">
+    <aside id="leftCatalogDrawer" class="fixed lg:static inset-y-0 left-0 z-40 w-72 sm:w-80 border-r border-white/[0.08] bg-dark-900/95 lg:bg-dark-900/60 backdrop-blur-xl flex flex-col shrink-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-out">
       
       <!-- Domain Filter Bar -->
       <div class="p-3 border-b border-white/[0.08] space-y-2">
@@ -235,28 +256,33 @@
             <i data-lucide="layers" class="w-3.5 h-3.5 text-accent-500"></i>
             <span>8대 도메인 카탈로그</span>
           </span>
-          <span id="catalogCountBadge" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-dark-800 text-slate-300">24 Patterns</span>
+          <div class="flex items-center gap-1.5">
+            <span id="catalogCountBadge" class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-dark-800 text-slate-300">22종</span>
+            <button onclick="closeAllMobileDrawers()" class="lg:hidden p-1 rounded hover:bg-white/10 text-slate-400">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
         </div>
         <div class="relative">
-          <input type="text" id="sidebarSearchInput" oninput="filterSidebarList(this.value)" placeholder="이름, 태그 검색..." class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-dark-950/70 border border-white/10 text-xs text-slate-200 focus:outline-none focus:border-accent-500 transition" />
+          <input type="text" id="sidebarSearchInput" oninput="filterSidebarList(this.value)" placeholder="이름, 태그 검색..." class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-dark-950/80 border border-white/10 text-xs text-slate-200 focus:outline-none focus:border-accent-500 transition" />
           <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5"></i>
         </div>
       </div>
 
-      <!-- Domain Accordion List (Scrollable) -->
+      <!-- Domain Accordion List -->
       <div class="flex-1 overflow-y-auto p-2 space-y-1.5 text-xs font-medium" id="domainNavTree">
-        <!-- Dynamically Populated By JavaScript -->
+        <!-- Populated By JS -->
       </div>
 
       <!-- Tech Stack Badges Filter -->
-      <div class="p-3 border-t border-white/[0.08] bg-dark-950/50 flex flex-wrap gap-1">
-        <span class="text-[10px] text-slate-400 w-full mb-1">기술 스택 필터:</span>
-        <button onclick="filterByTech('all')" class="tech-filter-badge active px-2 py-0.5 rounded text-[10px] bg-accent-600/30 text-indigo-300 border border-accent-500/40">전체</button>
-        <button onclick="filterByTech('CSS')" class="tech-filter-badge px-2 py-0.5 rounded text-[10px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">CSS</button>
-        <button onclick="filterByTech('WAAPI')" class="tech-filter-badge px-2 py-0.5 rounded text-[10px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">WAAPI</button>
-        <button onclick="filterByTech('Physics')" class="tech-filter-badge px-2 py-0.5 rounded text-[10px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">Physics</button>
-        <button onclick="filterByTech('SVG')" class="tech-filter-badge px-2 py-0.5 rounded text-[10px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">SVG</button>
-        <button onclick="filterByTech('Canvas')" class="tech-filter-badge px-2 py-0.5 rounded text-[10px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">Canvas</button>
+      <div class="p-3 border-t border-white/[0.08] bg-dark-950/60 flex flex-wrap gap-1">
+        <span class="text-[11px] text-slate-400 w-full mb-1">기술 스택 필터:</span>
+        <button onclick="filterByTech('all')" class="tech-filter-badge active px-2 py-0.5 rounded text-[11px] bg-accent-600/30 text-indigo-300 border border-accent-500/40">전체</button>
+        <button onclick="filterByTech('CSS')" class="tech-filter-badge px-2 py-0.5 rounded text-[11px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">CSS</button>
+        <button onclick="filterByTech('WAAPI')" class="tech-filter-badge px-2 py-0.5 rounded text-[11px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">WAAPI</button>
+        <button onclick="filterByTech('Physics')" class="tech-filter-badge px-2 py-0.5 rounded text-[11px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">Physics</button>
+        <button onclick="filterByTech('SVG')" class="tech-filter-badge px-2 py-0.5 rounded text-[11px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">SVG</button>
+        <button onclick="filterByTech('Canvas')" class="tech-filter-badge px-2 py-0.5 rounded text-[11px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">Canvas</button>
       </div>
     </aside>
 
@@ -266,285 +292,257 @@
     <main class="flex-1 flex flex-col min-w-0 bg-dark-950 relative overflow-hidden">
       
       <!-- Stage Toolbar -->
-      <div class="h-10 border-b border-white/[0.08] bg-dark-900/40 px-4 flex items-center justify-between shrink-0">
-        <div class="flex items-center gap-2 text-xs">
-          <span class="font-semibold text-white flex items-center gap-1.5" id="stageCurrentTitle">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>로딩 중...</span>
+      <div class="h-10 border-b border-white/[0.08] bg-dark-900/50 px-3 sm:px-4 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2 text-xs min-w-0">
+          <span class="font-semibold text-white flex items-center gap-1.5 truncate" id="stageCurrentTitle">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+            <span class="truncate">로딩 중...</span>
           </span>
-          <span class="text-slate-500">|</span>
-          <span class="text-slate-400 font-mono text-[11px]" id="stageTechBadge">CSS Keyframes</span>
+          <span class="text-slate-600 hidden sm:inline">|</span>
+          <span class="text-indigo-300 font-mono text-[11px] hidden sm:inline shrink-0" id="stageTechBadge">CSS Keyframes</span>
         </div>
 
         <!-- Responsive Simulation Handles -->
-        <div class="flex items-center gap-1.5">
-          <span class="text-[11px] text-slate-500 hidden md:inline">뷰포트 시뮬레이션:</span>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <span class="text-[11px] text-slate-400 hidden xl:inline">컨테이너 규격:</span>
           <button onclick="setStageViewportWidth('100%')" class="viewport-btn active px-2 py-0.5 rounded text-[11px] bg-dark-800 text-indigo-300 border border-indigo-500/30">Full</button>
-          <button onclick="setStageViewportWidth('768px')" class="viewport-btn px-2 py-0.5 rounded text-[11px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">Tablet</button>
-          <button onclick="setStageViewportWidth('390px')" class="viewport-btn px-2 py-0.5 rounded text-[11px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">Mobile</button>
-          <button onclick="toggleCheckerBackground()" class="p-1 rounded text-slate-400 hover:text-white" title="배경 격자 / 솔리드 토글">
+          <button onclick="setStageViewportWidth('768px')" class="hidden sm:inline-block viewport-btn px-2 py-0.5 rounded text-[11px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">Tablet</button>
+          <button onclick="setStageViewportWidth('390px')" class="hidden sm:inline-block viewport-btn px-2 py-0.5 rounded text-[11px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5">Mobile</button>
+          <button onclick="toggleCheckerBackground()" class="p-1 rounded text-slate-400 hover:text-white" title="배경 격자 토글">
             <i data-lucide="grid" class="w-3.5 h-3.5"></i>
           </button>
         </div>
       </div>
 
       <!-- Main Canvas Viewport Area -->
-      <div class="flex-1 overflow-auto bg-checker flex items-center justify-center p-4 relative" id="stageCanvasWrapper">
+      <div class="flex-1 overflow-y-auto bg-checker flex items-center justify-center p-2 sm:p-4 relative" id="stageCanvasWrapper">
         
-        <!-- ============================================== -->
-        <!-- VIEW MODE 1: FOCUS VIEW CONTAINER              -->
-        <!-- ============================================== -->
+        <!-- VIEW MODE 1: FOCUS VIEW CONTAINER -->
         <div id="viewContainer-focus" class="w-full h-full flex items-center justify-center transition-all duration-300">
-          <div id="stageResponsiveFrame" class="w-full h-full max-w-full rounded-2xl panel-glass p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden shadow-2xl transition-all duration-300">
+          <div id="stageResponsiveFrame" class="w-full h-full max-w-full rounded-2xl panel-glass p-4 sm:p-6 flex flex-col justify-between relative overflow-hidden shadow-2xl transition-all duration-300">
             <!-- Stage Live Content Area -->
-            <div id="activeAnimationStage" class="flex-1 flex flex-col items-center justify-center relative min-h-[300px]">
+            <div id="activeAnimationStage" class="flex-1 flex flex-col items-center justify-center relative min-h-[220px] sm:min-h-[280px] overflow-hidden">
               <!-- Injected by Active Animation Handler -->
             </div>
             
             <!-- Stage Footer Prompt -->
-            <div class="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-slate-400">
-              <span id="stageHintText" class="flex items-center gap-1.5">
-                <i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5 text-accent-500"></i>
-                <span>마우스를 올리거나 클릭하여 인터랙션을 트리거해보세요.</span>
+            <div class="mt-3 pt-3 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+              <span id="stageHintText" class="flex items-center gap-1.5 text-[11px] sm:text-xs">
+                <i data-lucide="hand" class="w-3.5 h-3.5 text-accent-500 shrink-0"></i>
+                <span id="stageDescText">터치하거나 클릭하여 인터랙션을 테스트하세요.</span>
               </span>
-              <div class="flex items-center gap-2">
-                <button onclick="triggerActiveAnimationAction()" class="px-3 py-1.5 rounded-lg bg-accent-600 hover:bg-accent-500 text-white font-medium text-xs shadow-md shadow-accent-600/30 flex items-center gap-1 transition">
-                  <i data-lucide="play" class="w-3 h-3 fill-current"></i> 동작 트리거
+              <div class="flex items-center gap-2 ml-auto">
+                <button onclick="triggerActiveAnimationAction()" class="px-3.5 py-1.5 rounded-lg bg-accent-600 hover:bg-accent-500 active:scale-95 text-white font-semibold text-xs shadow-md shadow-accent-600/30 flex items-center gap-1.5 transition">
+                  <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i> 동작 트리거
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ============================================== -->
-        <!-- VIEW MODE 2: A/B SPLIT SCREEN VIEW             -->
-        <!-- ============================================== -->
+        <!-- VIEW MODE 2: A/B SPLIT SCREEN VIEW -->
         <div id="viewContainer-split" class="w-full h-full hidden flex-col gap-3">
-          <div class="flex items-center justify-between bg-dark-900/90 px-4 py-2 rounded-xl border border-white/10 text-xs">
+          <div class="flex flex-wrap items-center justify-between gap-2 bg-dark-900/90 px-4 py-2.5 rounded-xl border border-white/10 text-xs">
             <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold font-mono">Side-by-Side A/B 대조</span>
-              <span class="text-slate-400">좌측: 정형 CSS 곡선 vs 우측: 실시간 탄성 스프링 물리</span>
+              <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold font-mono">A/B 실시간 비교</span>
+              <span class="text-slate-300 hidden sm:inline">좌측: 정형 베지어 곡선 vs 우측: 탄성 스프링 물리</span>
             </div>
-            <button onclick="triggerDualComparison()" class="px-4 py-1.5 rounded-lg bg-gradient-to-r from-accent-600 to-accent-cyan text-white font-semibold text-xs shadow-lg shadow-indigo-600/20 flex items-center gap-1.5 active:scale-95 transition">
-              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> 동시 실행 비교 (Simultaneous Trigger)
+            <button onclick="triggerDualComparison()" class="px-4 py-1.5 rounded-lg bg-gradient-to-r from-accent-600 to-accent-cyan text-white font-semibold text-xs shadow-lg flex items-center gap-1.5 active:scale-95 transition">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> 동시 발사 비교
             </button>
           </div>
 
-          <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Left Side: Option A (Standard Ease) -->
-            <div class="panel-glass rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden border-t-2 border-t-indigo-500">
+          <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 overflow-y-auto">
+            <div class="panel-glass rounded-2xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden border-t-2 border-t-indigo-500 min-h-[210px]">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider">Option A: Standard Easing</span>
-                <span id="abCurveLabelA" class="text-[11px] font-mono text-slate-400">ease-out (cubic-bezier)</span>
+                <span class="text-xs font-mono font-bold text-indigo-400">Option A: Cubic-Bezier</span>
+                <span id="abCurveLabelA" class="text-[11px] font-mono text-slate-400">cubic-bezier(0.16, 1, 0.3, 1)</span>
               </div>
-              <div id="abStageA" class="flex-1 flex flex-col items-center justify-center min-h-[220px]">
-                <!-- Cloned Test Element A -->
-              </div>
+              <div id="abStageA" class="flex-1 flex flex-col items-center justify-center py-4"></div>
               <div class="text-[11px] text-slate-400 text-center font-mono bg-dark-950/60 py-1.5 rounded-lg">
-                도달 시간: <span id="abResultA" class="text-indigo-300 font-bold">1200ms</span> | Overshoot: <span class="text-slate-400">0%</span>
+                지속시간: <span id="abResultA" class="text-indigo-300 font-bold">1200ms</span> | 오버슈트: 없음
               </div>
             </div>
 
-            <!-- Right Side: Option B (Physics Spring) -->
-            <div class="panel-glass rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden border-t-2 border-t-accent-cyan">
+            <div class="panel-glass rounded-2xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden border-t-2 border-t-accent-cyan min-h-[210px]">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-mono font-bold text-accent-cyan uppercase tracking-wider">Option B: Dynamic Spring</span>
-                <span id="abCurveLabelB" class="text-[11px] font-mono text-slate-400">Spring (Stiffness: 120, Damping: 14)</span>
+                <span class="text-xs font-mono font-bold text-accent-cyan">Option B: Hooke Spring</span>
+                <span id="abCurveLabelB" class="text-[11px] font-mono text-slate-400">Stiff: 120 / Damp: 14</span>
               </div>
-              <div id="abStageB" class="flex-1 flex flex-col items-center justify-center min-h-[220px]">
-                <!-- Cloned Test Element B -->
-              </div>
+              <div id="abStageB" class="flex-1 flex flex-col items-center justify-center py-4"></div>
               <div class="text-[11px] text-slate-400 text-center font-mono bg-dark-950/60 py-1.5 rounded-lg">
-                정착 시간: <span id="abResultB" class="text-cyan-300 font-bold">1350ms</span> | Overshoot: <span class="text-cyan-300">+18%</span>
+                정착시간: <span id="abResultB" class="text-cyan-300 font-bold">실시간 물리 연산</span> | 탄성 바운스 포함
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ============================================== -->
-        <!-- VIEW MODE 3: MATRIX GRID VIEW                  -->
-        <!-- ============================================== -->
+        <!-- VIEW MODE 3: MATRIX GRID VIEW -->
         <div id="viewContainer-matrix" class="w-full h-full hidden overflow-y-auto">
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-2" id="matrixGridContainer">
-            <!-- All Items in Active Domain Injected Here -->
-          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 p-1" id="matrixGridContainer"></div>
         </div>
 
       </div>
 
       <!-- ---------------------------------------------------- -->
-      <!-- BOTTOM DOCK: SCRUBBER TIMELINE & DUAL CURVE VISUALIZER-->
+      <!-- BOTTOM DOCK: SCRUBBER TIMELINE & PRESETS             -->
       <!-- ---------------------------------------------------- -->
-      <footer class="border-t border-white/[0.08] bg-dark-900/90 backdrop-blur-md p-3 shrink-0 flex flex-col gap-2">
-        <!-- Scrubber Progress Bar & Time Counters -->
+      <footer class="border-t border-white/[0.08] bg-dark-900/95 backdrop-blur-md px-3 sm:px-4 py-2.5 shrink-0 flex flex-col gap-2">
+        <!-- Scrubber Progress Bar -->
         <div class="flex items-center gap-3">
-          <span class="font-mono text-xs text-indigo-400 font-semibold w-16" id="timeCurrentDisplay">00:00.00</span>
+          <span class="font-mono text-xs text-indigo-400 font-semibold w-14 shrink-0" id="timeCurrentDisplay">00:00.00</span>
           
-          <div class="flex-1 relative flex items-center group">
+          <div class="flex-1 relative flex items-center">
             <input type="range" id="timelineScrubber" min="0" max="1000" value="0" step="1" oninput="onTimelineScrub(this.value)" class="w-full h-2 bg-dark-800 rounded-lg cursor-pointer appearance-none relative z-10" />
             <div id="scrubberFillBar" class="absolute left-0 top-0 h-2 bg-gradient-to-r from-accent-600 via-indigo-500 to-accent-cyan rounded-lg pointer-events-none w-0"></div>
           </div>
 
-          <span class="font-mono text-xs text-slate-400 w-16 text-right" id="timeTotalDisplay">00:01.20</span>
+          <span class="font-mono text-xs text-slate-400 w-14 text-right shrink-0" id="timeTotalDisplay">00:01.20</span>
         </div>
 
-        <!-- Collapsible Mini Curve & Physics Visualizer Row -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-white/[0.05] text-xs">
-          <!-- Live Curve Thumbnail & Equation -->
-          <div class="flex items-center gap-3">
-            <div class="w-16 h-8 bg-dark-950 rounded border border-white/10 relative overflow-hidden flex items-center justify-center">
-              <canvas id="miniCurveCanvas" width="64" height="32" class="w-full h-full"></canvas>
+        <!-- Mini Curve & Preset Row -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/[0.05] text-xs">
+          <div class="flex items-center gap-2.5">
+            <div class="w-14 h-7 bg-dark-950 rounded border border-white/10 relative overflow-hidden flex items-center justify-center shrink-0">
+              <canvas id="miniCurveCanvas" width="56" height="28" class="w-full h-full"></canvas>
             </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="text-[11px] text-slate-400">현재 커브:</span>
-                <span class="font-mono text-indigo-300 font-medium" id="curveEquationLabel">cubic-bezier(0.16, 1, 0.3, 1)</span>
-              </div>
-              <div class="text-[10px] text-slate-500 font-mono">가속도: 초반 폭발적 85% 감속 글라이딩</div>
+            <div class="truncate">
+              <span class="font-mono text-indigo-300 text-[11px]" id="curveEquationLabel">cubic-bezier(0.16, 1.00, 0.30, 1.00)</span>
             </div>
           </div>
 
-          <!-- Quick Actions & Presets -->
-          <div class="flex items-center gap-2">
-            <button onclick="applyPresetCurve('easeOutExpo')" class="px-2 py-1 rounded bg-dark-800 hover:bg-dark-700 text-[11px] text-slate-300 border border-white/5 font-mono">Expo Out</button>
-            <button onclick="applyPresetCurve('springOvershoot')" class="px-2 py-1 rounded bg-dark-800 hover:bg-dark-700 text-[11px] text-indigo-300 border border-white/5 font-mono">Spring Bounce</button>
-            <button onclick="applyPresetCurve('anticipate')" class="px-2 py-1 rounded bg-dark-800 hover:bg-dark-700 text-[11px] text-slate-300 border border-white/5 font-mono">Anticipate</button>
-            <button onclick="applyPresetCurve('linear')" class="px-2 py-1 rounded bg-dark-800 hover:bg-dark-700 text-[11px] text-slate-400 border border-white/5 font-mono">Linear</button>
+          <div class="flex items-center gap-1.5 overflow-x-auto">
+            <button onclick="applyPresetCurve('easeOutExpo')" class="px-2 py-1 rounded bg-dark-800 hover:bg-dark-700 text-[11px] text-slate-200 border border-white/5 font-mono shrink-0">Expo Out</button>
+            <button onclick="applyPresetCurve('springOvershoot')" class="px-2 py-1 rounded bg-dark-800 hover:bg-dark-700 text-[11px] text-indigo-300 border border-white/5 font-mono shrink-0">Spring</button>
+            <button onclick="applyPresetCurve('anticipate')" class="px-2 py-1 rounded bg-dark-800 hover:bg-dark-700 text-[11px] text-slate-200 border border-white/5 font-mono shrink-0">Anticipate</button>
+            <button onclick="applyPresetCurve('linear')" class="px-2 py-1 rounded bg-dark-800 hover:bg-dark-700 text-[11px] text-slate-400 border border-white/5 font-mono shrink-0">Linear</button>
           </div>
         </div>
       </footer>
 
+      <!-- ---------------------------------------------------- -->
+      <!-- MOBILE/TABLET DEDICATED BOTTOM NAVIGATION BAR        -->
+      <!-- ---------------------------------------------------- -->
+      <nav class="md:hidden h-12 border-t border-white/10 bg-dark-950 px-2 flex items-center justify-around shrink-0 z-30">
+        <button onclick="toggleMobileDrawer('catalog')" class="flex flex-col items-center justify-center py-1 px-2 text-slate-300 hover:text-white">
+          <i data-lucide="layers" class="w-4 h-4 text-accent-500"></i>
+          <span class="text-[10px] mt-0.5">카탈로그</span>
+        </button>
+        <button onclick="setViewMode('focus'); closeAllMobileDrawers();" class="flex flex-col items-center justify-center py-1 px-2 text-slate-300 hover:text-white">
+          <i data-lucide="crosshair" class="w-4 h-4 text-emerald-400"></i>
+          <span class="text-[10px] mt-0.5">단일 스테이지</span>
+        </button>
+        <button onclick="setViewMode('split'); closeAllMobileDrawers();" class="flex flex-col items-center justify-center py-1 px-2 text-slate-300 hover:text-white">
+          <i data-lucide="columns-2" class="w-4 h-4 text-accent-cyan"></i>
+          <span class="text-[10px] mt-0.5">A/B 비교</span>
+        </button>
+        <button onclick="setViewMode('matrix'); closeAllMobileDrawers();" class="flex flex-col items-center justify-center py-1 px-2 text-slate-300 hover:text-white">
+          <i data-lucide="layout-grid" class="w-4 h-4 text-amber-400"></i>
+          <span class="text-[10px] mt-0.5">전체 그리드</span>
+        </button>
+        <button onclick="toggleMobileDrawer('inspector')" class="flex flex-col items-center justify-center py-1 px-2 text-slate-300 hover:text-white">
+          <i data-lucide="sliders" class="w-4 h-4 text-pink-400"></i>
+          <span class="text-[10px] mt-0.5">파라미터/코드</span>
+        </button>
+      </nav>
+
     </main>
 
     <!-- ------------------------------------------------------ -->
-    <!-- RIGHT INSPECTOR & TELEMETRY DOCK (360px)              -->
+    <!-- RIGHT INSPECTOR & TELEMETRY DOCK (Responsive Drawer)   -->
     <!-- ------------------------------------------------------ -->
-    <aside class="w-80 sm:w-96 border-l border-white/[0.08] bg-dark-900/70 backdrop-blur-md flex flex-col shrink-0">
+    <aside id="rightInspectorDrawer" class="fixed lg:static inset-y-0 right-0 z-40 w-80 sm:w-96 border-l border-white/[0.08] bg-dark-900/95 lg:bg-dark-900/70 backdrop-blur-xl flex flex-col shrink-0 transform translate-x-full lg:translate-x-0 transition-transform duration-300 ease-out">
       
-      <!-- Tab Header: [파라미터 튜너] [성능 진단] [코드 생성] -->
-      <div class="flex border-b border-white/[0.08] bg-dark-950/40 p-1">
-        <button onclick="switchInspectorTab('tuner')" id="tabBtn-tuner" class="inspector-tab-btn active flex-1 py-1.5 rounded-md text-xs font-semibold text-center transition bg-accent-600/20 text-indigo-300 border border-accent-500/30 flex items-center justify-center gap-1.5">
+      <!-- Tab Header -->
+      <div class="flex items-center border-b border-white/[0.08] bg-dark-950/50 p-1 gap-1">
+        <button onclick="switchInspectorTab('tuner')" id="tabBtn-tuner" class="inspector-tab-btn active flex-1 py-1.5 rounded-md text-xs font-semibold text-center transition bg-accent-600/20 text-indigo-300 border border-accent-500/30 flex items-center justify-center gap-1">
           <i data-lucide="sliders" class="w-3.5 h-3.5"></i> 파라미터
         </button>
-        <button onclick="switchInspectorTab('telemetry')" id="tabBtn-telemetry" class="inspector-tab-btn flex-1 py-1.5 rounded-md text-xs font-medium text-center text-slate-400 hover:text-white transition border border-transparent flex items-center justify-center gap-1.5">
-          <i data-lucide="gauge" class="w-3.5 h-3.5"></i> 성능 진단
+        <button onclick="switchInspectorTab('telemetry')" id="tabBtn-telemetry" class="inspector-tab-btn flex-1 py-1.5 rounded-md text-xs font-medium text-center text-slate-400 hover:text-white transition border border-transparent flex items-center justify-center gap-1">
+          <i data-lucide="gauge" class="w-3.5 h-3.5"></i> 성능
         </button>
-        <button onclick="switchInspectorTab('export')" id="tabBtn-export" class="inspector-tab-btn flex-1 py-1.5 rounded-md text-xs font-medium text-center text-slate-400 hover:text-white transition border border-transparent flex items-center justify-center gap-1.5">
-          <i data-lucide="code" class="w-3.5 h-3.5"></i> 소스 코드
+        <button onclick="switchInspectorTab('export')" id="tabBtn-export" class="inspector-tab-btn flex-1 py-1.5 rounded-md text-xs font-medium text-center text-slate-400 hover:text-white transition border border-transparent flex items-center justify-center gap-1">
+          <i data-lucide="code" class="w-3.5 h-3.5"></i> 코드
+        </button>
+        <button onclick="closeAllMobileDrawers()" class="lg:hidden p-1.5 rounded-md text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
 
-      <!-- Tab Body Scrollable Container -->
-      <div class="flex-1 overflow-y-auto p-4 space-y-6 text-xs" id="inspectorBody">
+      <!-- Tab Body -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-5 text-xs" id="inspectorBody">
         
-        <!-- ============================================== -->
-        <!-- TAB 1: PARAMETER TUNER (실시간 물리 및 이징 조절) -->
-        <!-- ============================================== -->
-        <div id="inspectorTab-tuner" class="space-y-5">
-          
-          <!-- Universal Timing Parameters -->
+        <!-- TAB 1: PARAMETER TUNER -->
+        <div id="inspectorTab-tuner" class="space-y-4">
           <div class="space-y-3">
             <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase block border-b border-white/5 pb-1">1. 타이밍 & 반복 (Timing)</span>
             
-            <!-- Duration -->
             <div>
               <div class="flex justify-between mb-1">
                 <span class="text-slate-300">지속 시간 (Duration)</span>
                 <span id="paramLabel-duration" class="font-mono text-indigo-400 font-semibold">1200 ms</span>
               </div>
-              <input type="range" id="param-duration" min="100" max="5000" step="50" value="1200" oninput="onParamChange('duration', this.value)" class="w-full h-1.5 bg-dark-800 rounded cursor-pointer" />
+              <input type="range" id="param-duration" min="150" max="4000" step="50" value="1200" oninput="onParamChange('duration', this.value)" class="w-full h-1.5 bg-dark-800 rounded cursor-pointer" />
             </div>
 
-            <!-- Delay -->
             <div>
               <div class="flex justify-between mb-1">
                 <span class="text-slate-300">시작 지연 (Delay)</span>
                 <span id="paramLabel-delay" class="font-mono text-indigo-400 font-semibold">0 ms</span>
               </div>
-              <input type="range" id="param-delay" min="0" max="2000" step="50" value="0" oninput="onParamChange('delay', this.value)" class="w-full h-1.5 bg-dark-800 rounded cursor-pointer" />
-            </div>
-
-            <!-- Iterations -->
-            <div class="grid grid-cols-2 gap-2 pt-1">
-              <div>
-                <label class="block text-slate-400 mb-1">반복 모드</label>
-                <select id="param-repeat" onchange="onParamChange('repeat', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-dark-950 border border-white/10 text-white font-mono text-xs focus:outline-none">
-                  <option value="1">1회 (Once)</option>
-                  <option value="infinite">무한 (Infinite)</option>
-                  <option value="yoyo">핑퐁 왕복 (Yo-yo)</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-slate-400 mb-1">방향 (Direction)</label>
-                <select id="param-direction" onchange="onParamChange('direction', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-dark-950 border border-white/10 text-white font-mono text-xs focus:outline-none">
-                  <option value="normal">Normal</option>
-                  <option value="reverse">Reverse</option>
-                  <option value="alternate">Alternate</option>
-                </select>
-              </div>
+              <input type="range" id="param-delay" min="0" max="1500" step="50" value="0" oninput="onParamChange('delay', this.value)" class="w-full h-1.5 bg-dark-800 rounded cursor-pointer" />
             </div>
           </div>
 
-          <!-- Spring Harmonic Physics Tuner -->
-          <div class="space-y-3 pt-2">
-            <span class="text-[11px] font-bold text-accent-cyan tracking-wider uppercase block border-b border-white/5 pb-1">2. 스프링 물리 다이내믹스 (Spring)</span>
+          <!-- Spring Physics Tuner -->
+          <div class="space-y-3 pt-1">
+            <span class="text-[11px] font-bold text-accent-cyan tracking-wider uppercase block border-b border-white/5 pb-1">2. 스프링 물리 (Spring Dynamics)</span>
             
-            <!-- Stiffness -->
             <div>
               <div class="flex justify-between mb-1">
-                <span class="text-slate-300">강성 (Stiffness / 탄성 강도)</span>
+                <span class="text-slate-300">강성 (Stiffness)</span>
                 <span id="paramLabel-stiffness" class="font-mono text-accent-cyan font-semibold">120</span>
               </div>
-              <input type="range" id="param-stiffness" min="20" max="500" step="5" value="120" oninput="onParamChange('stiffness', this.value)" class="w-full h-1.5 bg-dark-800 rounded cursor-pointer" />
+              <input type="range" id="param-stiffness" min="20" max="400" step="5" value="120" oninput="onParamChange('stiffness', this.value)" class="w-full h-1.5 bg-dark-800 rounded cursor-pointer" />
             </div>
 
-            <!-- Damping -->
             <div>
               <div class="flex justify-between mb-1">
-                <span class="text-slate-300">감쇠비 (Damping / 저항 감속)</span>
+                <span class="text-slate-300">감쇠비 (Damping)</span>
                 <span id="paramLabel-damping" class="font-mono text-accent-cyan font-semibold">14</span>
               </div>
-              <input type="range" id="param-damping" min="1" max="60" step="1" value="14" oninput="onParamChange('damping', this.value)" class="w-full h-1.5 bg-dark-800 rounded cursor-pointer" />
+              <input type="range" id="param-damping" min="2" max="45" step="1" value="14" oninput="onParamChange('damping', this.value)" class="w-full h-1.5 bg-dark-800 rounded cursor-pointer" />
             </div>
 
-            <!-- Mass -->
             <div>
               <div class="flex justify-between mb-1">
-                <span class="text-slate-300">질량 (Mass / 관성 무게)</span>
+                <span class="text-slate-300">질량 (Mass)</span>
                 <span id="paramLabel-mass" class="font-mono text-accent-cyan font-semibold">1.0 kg</span>
               </div>
-              <input type="range" id="param-mass" min="0.2" max="5.0" step="0.1" value="1.0" oninput="onParamChange('mass', this.value)" class="w-full h-1.5 bg-dark-800 rounded cursor-pointer" />
+              <input type="range" id="param-mass" min="0.2" max="4.0" step="0.1" value="1.0" oninput="onParamChange('mass', this.value)" class="w-full h-1.5 bg-dark-800 rounded cursor-pointer" />
             </div>
           </div>
 
-          <!-- Custom Interactive Bezier Pad -->
-          <div class="space-y-3 pt-2">
+          <!-- Custom Interactive Bezier Pad (Supports Touch & Mouse) -->
+          <div class="space-y-2.5 pt-1">
             <div class="flex justify-between items-center border-b border-white/5 pb-1">
-              <span class="text-[11px] font-bold text-indigo-400 tracking-wider uppercase">3. 베지어 인터랙티브 패드</span>
-              <span class="text-[10px] text-slate-500 font-mono">드래그하여 조절</span>
+              <span class="text-[11px] font-bold text-indigo-400 tracking-wider uppercase">3. 베지어 곡선 패드 (터치/드래그)</span>
+              <span class="text-[10px] text-slate-500 font-mono">P1, P2 핸들 조작</span>
             </div>
             
-            <div class="relative w-full aspect-square bg-dark-950 rounded-xl border border-white/10 p-2 flex items-center justify-center">
-              <canvas id="inspectorBezierCanvas" width="280" height="280" class="cursor-crosshair rounded-lg"></canvas>
+            <div class="relative w-full flex items-center justify-center bg-dark-950 rounded-xl border border-white/10 p-2">
+              <canvas id="inspectorBezierCanvas" width="250" height="250" class="cursor-crosshair rounded-lg touch-none-drag"></canvas>
             </div>
             <div class="p-2 bg-dark-950 rounded-lg border border-white/5 font-mono text-[11px] text-emerald-400 flex justify-between items-center">
               <span id="bezierParamString">cubic-bezier(0.16, 1.00, 0.30, 1.00)</span>
-              <button onclick="copyBezierString()" class="text-slate-400 hover:text-white" title="CSS 복사"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
+              <button onclick="copyBezierString()" class="text-slate-400 hover:text-white p-1" title="CSS 복사"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
             </div>
           </div>
-
-          <!-- Pattern-Specific Parameters Container (Dynamic) -->
-          <div id="patternSpecificControls" class="space-y-3 pt-2">
-            <!-- Dynamically injected for Counters, Typography, Shaders etc -->
-          </div>
-
         </div>
 
-        <!-- ============================================== -->
-        <!-- TAB 2: TELEMETRY & PERFORMANCE MONITOR        -->
-        <!-- ============================================== -->
-        <div id="inspectorTab-telemetry" class="hidden space-y-5">
-          <div class="p-3 bg-dark-950 rounded-xl border border-white/10 flex items-center justify-between">
+        <!-- TAB 2: TELEMETRY & PERFORMANCE MONITOR -->
+        <div id="inspectorTab-telemetry" class="hidden space-y-4">
+          <div class="p-3.5 bg-dark-950 rounded-xl border border-white/10 flex items-center justify-between">
             <div>
               <span class="text-[11px] text-slate-400 block">실시간 프레임 레이트</span>
               <div class="flex items-baseline gap-1 mt-0.5">
@@ -553,86 +551,55 @@
               </div>
             </div>
             <div class="text-right">
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Stable 60Hz</span>
-              <div class="text-[10px] text-slate-500 font-mono mt-1">Frame Drop: 0%</div>
+              <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">GPU 가속 활성</span>
+              <div class="text-[10px] text-slate-500 font-mono mt-1">Touch / Pointer Ready</div>
             </div>
           </div>
 
-          <!-- Pipeline Radar Diagnostics -->
-          <div class="space-y-2">
-            <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase block">렌더링 파이프라인 단계 분석</span>
+          <div class="space-y-2.5">
+            <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase block">렌더링 파이프라인 분석</span>
 
-            <div class="p-3 rounded-xl bg-dark-950/80 border border-white/5 space-y-2.5">
+            <div class="p-3 rounded-xl bg-dark-950/80 border border-white/5 space-y-1.5">
               <div class="flex items-center justify-between">
                 <span class="flex items-center gap-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                  <span class="text-slate-300 font-medium">Compositor Only (최적)</span>
+                  <span class="text-slate-200 font-medium">Compositor Layer</span>
                 </span>
                 <span class="text-[11px] font-mono text-emerald-400 font-bold">transform, opacity</span>
               </div>
-              <p class="text-[10px] text-slate-400">메인 스레드를 블로킹하지 않고 GPU 하드웨어 가속 레이어에서 직접 렌더링됩니다.</p>
+              <p class="text-[11px] text-slate-400 leading-relaxed">메인 스레드 블로킹 없이 GPU 컴포지터에서 직접 합성됩니다.</p>
             </div>
 
-            <div class="p-3 rounded-xl bg-dark-950/80 border border-white/5 space-y-2.5">
+            <div class="p-3 rounded-xl bg-dark-950/80 border border-white/5 space-y-1.5">
               <div class="flex items-center justify-between">
                 <span class="flex items-center gap-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                  <span class="text-slate-300 font-medium">Layout Reflow 위험도</span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-accent-cyan"></span>
+                  <span class="text-slate-200 font-medium">모바일 터치 응답성</span>
                 </span>
-                <span id="reflowBadge" class="text-[11px] font-mono text-emerald-400 font-bold">0 회 (안전)</span>
+                <span class="text-[11px] font-mono text-accent-cyan font-bold">PointerEvent 통합</span>
               </div>
-              <p class="text-[10px] text-slate-400">width, height, top, margin 변경 시 브라우저가 전체 레이아웃을 다시 계산하여 프레임 드랍이 유발됩니다.</p>
+              <p class="text-[11px] text-slate-400 leading-relaxed">마우스와 모바일 멀티터치 제스처가 단일 벡터 파이프라인으로 동작합니다.</p>
             </div>
-
-            <div class="p-3 rounded-xl bg-dark-950/80 border border-white/5 space-y-2.5">
-              <div class="flex items-center justify-between">
-                <span class="flex items-center gap-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span>
-                  <span class="text-slate-300 font-medium">Paint & Rasterize 비용</span>
-                </span>
-                <span class="text-[11px] font-mono text-slate-300">Sub-millisecond</span>
-              </div>
-              <p class="text-[10px] text-slate-400">그림자(box-shadow), 필터(blur) 등 픽셀 채색 비용을 지속 모니터링합니다.</p>
-            </div>
-          </div>
-
-          <!-- Diagnostic Advice Card -->
-          <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 space-y-1">
-            <div class="flex items-center gap-1.5 font-bold text-xs">
-              <i data-lucide="info" class="w-3.5 h-3.5"></i>
-              <span>모션 아키텍트 권장 팁</span>
-            </div>
-            <p class="text-[11px] leading-relaxed text-indigo-200/80">
-              숫자 카운트나 모핑 시 CSS <code class="font-mono text-white">will-change: transform</code>을 부여하면 전용 GPU 컴포지팅 레이어가 사전에 할당되어 부드러움이 배가됩니다.
-            </p>
           </div>
         </div>
 
-        <!-- ============================================== -->
-        <!-- TAB 3: CODE GENERATOR & EXPORTER              -->
-        <!-- ============================================== -->
+        <!-- TAB 3: CODE GENERATOR & EXPORTER -->
         <div id="inspectorTab-export" class="hidden space-y-4">
           <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">코드 내보내기 타깃</span>
-            <button onclick="copyGeneratedCode()" class="px-3 py-1 rounded bg-accent-600 hover:bg-accent-500 text-white font-medium text-xs flex items-center gap-1.5 transition active:scale-95 shadow">
-              <i data-lucide="copy" class="w-3 h-3"></i> 전체 복사
+            <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">실시간 코드 추출</span>
+            <button onclick="copyGeneratedCode()" class="px-3 py-1.5 rounded-lg bg-accent-600 hover:bg-accent-500 text-white font-medium text-xs flex items-center gap-1.5 transition active:scale-95 shadow">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i> 코드 복사
             </button>
           </div>
 
-          <!-- Code Target Switcher -->
           <div class="grid grid-cols-3 gap-1 bg-dark-950 p-1 rounded-lg border border-white/5 text-[11px] font-mono">
-            <button onclick="setExportFormat('css')" id="exportFmt-css" class="py-1 rounded bg-dark-800 text-indigo-300 text-center font-bold">Pure CSS</button>
-            <button onclick="setExportFormat('waapi')" id="exportFmt-waapi" class="py-1 rounded text-slate-400 text-center hover:text-white">WAAPI (JS)</button>
-            <button onclick="setExportFormat('framer')" id="exportFmt-framer" class="py-1 rounded text-slate-400 text-center hover:text-white">Framer</button>
+            <button onclick="setExportFormat('css')" id="exportFmt-css" class="py-1.5 rounded bg-dark-800 text-indigo-300 text-center font-bold">Pure CSS</button>
+            <button onclick="setExportFormat('waapi')" id="exportFmt-waapi" class="py-1.5 rounded text-slate-400 text-center hover:text-white">WAAPI (JS)</button>
+            <button onclick="setExportFormat('framer')" id="exportFmt-framer" class="py-1.5 rounded text-slate-400 text-center hover:text-white">Framer</button>
           </div>
 
-          <!-- Code View Area -->
           <div class="p-3 bg-dark-950 rounded-xl border border-white/10 font-mono text-[11px] text-slate-300 leading-relaxed overflow-x-auto max-h-[380px]">
             <pre><code id="generatedCodeArea" class="select-all">/* 코드 생성 중... */</code></pre>
-          </div>
-
-          <div class="text-[10px] text-slate-500 font-mono">
-            * 파라미터를 조절할 때마다 위 코드가 실시간 동기화되어 즉시 복사할 수 있습니다.
           </div>
         </div>
 
@@ -675,10 +642,26 @@
   <!-- ======================================================== -->
   <script>
     /* ======================================================== */
-    /* 0. AUDIO SYNTHESIS & SOUND EFFECTS ENGINE                */
+    /* 0. AUDIO SYNTHESIS & LIFECYCLE CLEANUP ENGINE            */
     /* ======================================================== */
     let audioCtx = null;
     let isSoundMuted = false;
+
+    // Lifecycle registry to prevent memory leaks & duplicate timers/listeners
+    let activeCleanupFns = [];
+    let activeScrubHandler = null;
+
+    function registerCleanup(fn) {
+      activeCleanupFns.push(fn);
+    }
+
+    function cleanupActiveStage() {
+      while (activeCleanupFns.length > 0) {
+        const fn = activeCleanupFns.pop();
+        try { fn(); } catch (e) {}
+      }
+      activeScrubHandler = null;
+    }
 
     function initAudio() {
       if (!audioCtx) {
@@ -686,10 +669,11 @@
       }
     }
 
-    function playTone(freq = 600, duration = 0.04, type = 'sine', volume = 0.03) {
+    function playTone(freq = 600, duration = 0.04, type = 'sine', volume = 0.025) {
       if (isSoundMuted) return;
       try {
         initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = type;
@@ -740,11 +724,39 @@
       ta.select();
       try {
         document.execCommand('copy');
-        showToast('성공적으로 복사되었습니다!', '클립보드에 소스 코드가 주입되었습니다.');
+        showToast('클립보드 복사 완료', '소스 코드가 복사되었습니다.');
       } catch (err) {
         showToast('복사 실패', '다시 시도해주세요.');
       }
       document.body.removeChild(ta);
+    }
+
+    /* ======================================================== */
+    /* MOBILE & TABLET DRAWER CONTROLLER                        */
+    /* ======================================================== */
+    function toggleMobileDrawer(side) {
+      const leftDrawer = document.getElementById('leftCatalogDrawer');
+      const rightDrawer = document.getElementById('rightInspectorDrawer');
+      const backdrop = document.getElementById('mobileDrawerBackdrop');
+
+      if (side === 'catalog') {
+        const isClosed = leftDrawer.classList.contains('-translate-x-full');
+        rightDrawer.classList.add('translate-x-full');
+        leftDrawer.classList.toggle('-translate-x-full', !isClosed);
+        backdrop.classList.toggle('hidden', !isClosed);
+      } else if (side === 'inspector') {
+        const isClosed = rightDrawer.classList.contains('translate-x-full');
+        leftDrawer.classList.add('-translate-x-full');
+        rightDrawer.classList.toggle('translate-x-full', !isClosed);
+        backdrop.classList.toggle('hidden', !isClosed);
+      }
+      playTone(620, 0.03);
+    }
+
+    function closeAllMobileDrawers() {
+      document.getElementById('leftCatalogDrawer').classList.add('-translate-x-full');
+      document.getElementById('rightInspectorDrawer').classList.add('translate-x-full');
+      document.getElementById('mobileDrawerBackdrop').classList.add('hidden');
     }
 
     /* ======================================================== */
@@ -762,38 +774,34 @@
     ];
 
     const CATALOG = [
-      // Domain 1: Micro & Forms
+      {
+        id: 'smooth-counter',
+        domain: 'micro',
+        name: '스무스 숫자 카운터 (1 → 2 보간)',
+        tech: 'WAAPI / RAF',
+        desc: '1에서 2로 바뀔 때 즉시 바뀌지 않고 설정된 이징 곡선을 따라 부드럽게 카운트업됩니다.',
+        tags: ['#CountUp', '#Odometer', '#Number'],
+        render: renderSmoothCounter,
+        export: getExportSmoothCounter
+      },
       {
         id: 'morph-button',
         domain: 'micro',
         name: '버튼 상태 모핑 (다운로드→체크)',
         tech: 'CSS + WAAPI',
-        desc: '클릭 시 로딩 스피너로 축소 후 성공 체크마크로 자연스럽게 변형되는 3단 상태 전이 머신',
+        desc: '클릭 시 로딩 스피너로 축소 후 성공 체크마크로 자연스럽게 변형되는 3단 상태 전이 버튼입니다.',
         tags: ['#StateMorph', '#Button', '#Micro'],
         render: renderMorphButton,
-        trigger: triggerMorphButton,
         export: getExportMorphButton
-      },
-      {
-        id: 'smooth-counter',
-        domain: 'micro',
-        name: '스무스 숫자 카운터 (1에서 2로 서서히)',
-        tech: 'WAAPI / RAF',
-        desc: '1에서 2로 바뀔 때 즉시 점프하지 않고 밀리초 단위 보간으로 완만한 감속을 주는 수치 트랜지션',
-        tags: ['#CountUp', '#Odometer', '#Number'],
-        render: renderSmoothCounter,
-        trigger: triggerSmoothCounter,
-        export: getExportSmoothCounter
       },
       {
         id: 'jelly-toggle',
         domain: 'micro',
         name: '젤리 탄성 스프링 토글',
         tech: 'CSS Keyframes',
-        desc: '스위치를 켤 때 손잡이가 고무줄처럼 늘어났다가 탄성 오버슈트로 제자리에 착지하는 토글',
+        desc: '스위치를 터치할 때 손잡이가 고무줄처럼 늘어났다가 탄성 오버슈트로 착지합니다.',
         tags: ['#Toggle', '#Jelly', '#Spring'],
         render: renderJellyToggle,
-        trigger: triggerJellyToggle,
         export: getExportJellyToggle
       },
       {
@@ -801,93 +809,79 @@
         domain: 'micro',
         name: 'SVG 보더 트레이스 폼 포커스',
         tech: 'SVG + CSS',
-        desc: '인풋 필드에 포커스할 때 네온 빛 줄기가 테두리를 휘감아 돌며 반응하는 폼 피드백',
+        desc: '입력창에 포커스하거나 버튼을 누르면 네온 빛 줄기가 테두리를 따라 매끄럽게 주행합니다.',
         tags: ['#BorderTrace', '#Input', '#Form'],
         render: renderBorderTrace,
-        trigger: triggerBorderTrace,
         export: getExportBorderTrace
       },
-
-      // Domain 2: Layout & FLIP
       {
         id: 'flip-grid',
         domain: 'layout',
         name: 'FLIP 그리드 필터 재배치',
         tech: 'JS FLIP Algorithm',
-        desc: '아이템 필터링 시 끊김 없이 첫 위치(First)와 끝 위치(Last)의 차이를 계산해 부드럽게 미끄러지는 재정렬',
+        desc: '카드가 섞일 때 첫 위치(First)와 끝 위치(Last)의 역행렬을 계산해 미끄러지듯 정렬됩니다.',
         tags: ['#FLIP', '#Grid', '#Layout'],
         render: renderFlipGrid,
-        trigger: triggerFlipGrid,
         export: getExportFlipGrid
       },
       {
         id: 'card-expand',
         domain: 'layout',
-        name: '카드-투-풀스크린 확장 (Shared Element)',
+        name: '카드-투-모달 확장 (Shared Element)',
         tech: 'FLIP + CSS',
-        desc: '작은 썸네일 카드를 클릭하면 화면 중앙으로 부드럽게 펼쳐지며 내부 텍스트가 제자리를 찾는 전환',
+        desc: '썸네일 카드를 터치하면 컨테이너 전체로 부드럽게 확장되며 상세 정보가 나타납니다.',
         tags: ['#Modal', '#CardExpand', '#SharedElement'],
         render: renderCardExpand,
-        trigger: triggerCardExpand,
         export: getExportCardExpand
       },
       {
         id: 'auto-accordion',
         domain: 'layout',
         name: '가변 높이 Auto-Height 아코디언',
-        tech: 'JS calc / CSS grid',
-        desc: 'CSS grid-template-rows 0fr에서 1fr로 트랜지션하여 고정 height 없이 유연하게 열리는 아코디언',
+        tech: 'CSS Grid 0fr-1fr',
+        desc: 'CSS grid-template-rows 0fr에서 1fr 트랜지션으로 끊김 없이 열리는 아코디언입니다.',
         tags: ['#Accordion', '#AutoHeight'],
         render: renderAutoAccordion,
-        trigger: triggerAutoAccordion,
         export: getExportAutoAccordion
       },
-
-      // Domain 3: Scroll Driven
       {
         id: 'scroll-scrubber',
         domain: 'scroll',
-        name: '스크롤 1:1 스크러빙 & 지연(Lag)',
+        name: '스크롤 1:1 스크러빙 큐브',
         tech: 'WAAPI / Lerp',
-        desc: '스크롤 위치에 완전히 동기화되어 회전과 크기가 바뀌며, 부드러운 관성 지연(Lerp)이 적용된 큐브',
+        desc: '하단 타임라인 바나 슬라이더에 1:1로 동기화되어 3D 회전과 스케일이 즉각 변화합니다.',
         tags: ['#Scroll', '#Scrub', '#Lerp'],
         render: renderScrollScrubber,
-        trigger: triggerScrollScrubber,
         export: getExportScrollScrubber
       },
       {
         id: 'parallax-depth',
         domain: 'scroll',
-        name: '다층 패럴랙스 뎁스 (Depth Layers)',
+        name: '다층 패럴랙스 뎁스 (터치/마우스)',
         tech: 'CSS Perspective',
-        desc: '원경, 중경, 근경의 레이어가 각기 다른 속도로 밀려나며 느껴지는 3D 원근 입체감',
+        desc: '마우스 이동이나 손가락 터치 드래그에 따라 배경·중경·근경이 서로 다른 시차로 움직입니다.',
         tags: ['#Parallax', '#Depth', '#3D'],
         render: renderParallaxDepth,
-        trigger: triggerParallaxDepth,
         export: getExportParallaxDepth
       },
-
-      // Domain 4: Physics & Gestures
       {
         id: 'spring-toss',
         domain: 'physics',
-        name: '관성 스로잉 & 경계 바운스 (Inertia Toss)',
-        tech: 'Physics Hooke Law',
-        desc: '마우스로 카드를 집어던졌을 때 발사 속도와 마찰력에 따라 벽에 부딪쳐 튕기는 리얼 물리 시뮬레이션',
-        tags: ['#Physics', '#Toss', '#Inertia'],
+        name: '관성 스로잉 & 벽 충돌 바운스',
+        tech: 'Physics Velocity',
+        desc: '마우스나 손가락으로 박스를 잡고 튕겨 던지면 속도와 탄성 계수에 따라 벽에 부딪혀 튕깁니다.',
+        tags: ['#Physics', '#Toss', '#TouchDrag'],
         render: renderSpringToss,
-        trigger: triggerSpringToss,
         export: getExportSpringToss
       },
       {
         id: 'magnetic-orb',
         domain: 'physics',
-        name: '마그네틱 자석 인력 커서',
+        name: '마그네틱 자석 인력 버튼',
         tech: 'JS Vector Math',
-        desc: '마우스 커서 반경에 접근하면 자석에 이끌리듯 자연스럽게 빨려오는 마이크로 버튼 인터랙션',
+        desc: '커서나 터치 지점이 버튼 반경에 접근하면 자석에 이끌리듯 부드럽게 끌려옵니다.',
         tags: ['#Magnetic', '#Cursor', '#Hover'],
         render: renderMagneticOrb,
-        trigger: triggerMagneticOrb,
         export: getExportMagneticOrb
       },
       {
@@ -895,128 +889,109 @@
         domain: 'physics',
         name: '3D 틸트 + 홀로그램 반사광',
         tech: 'CSS 3D Transform',
-        desc: '커서의 XY 좌표 각도에 따라 카드 표면의 그라디언트 스펙큘러 하이라이트가 회전하는 프리미엄 카드',
+        desc: '터치 및 마우스 각도에 맞춰 카드가 3D로 기울어지며 표면의 홀로그램 반사광이 이동합니다.',
         tags: ['#Tilt', '#Specular', '#Glassmorphism'],
         render: renderTiltSpecular,
-        trigger: triggerTiltSpecular,
         export: getExportTiltSpecular
       },
-
-      // Domain 5: SVG & Vector Morphing
       {
         id: 'svg-line-draw',
         domain: 'vector',
         name: 'SVG 라인 드로잉 (Dashoffset)',
         tech: 'SVG Path',
-        desc: '펜으로 한 획씩 스케치하듯 아이콘의 아웃라인이 순차적으로 그려지는 벡터 패스 드로잉',
+        desc: '펜으로 스케치하듯 벡터 외곽선이 순차적으로 그려지는 stroke-dashoffset 기법입니다.',
         tags: ['#SVG', '#LineDrawing', '#Path'],
         render: renderSvgLineDraw,
-        trigger: triggerSvgLineDraw,
         export: getExportSvgLineDraw
       },
       {
         id: 'svg-hamburger-x',
         domain: 'vector',
-        name: '햄버거 메뉴 ↔ X 닫기 벡터 모핑',
+        name: '햄버거 메뉴 ↔ X 닫기 모핑',
         tech: 'SVG Transform',
-        desc: '3개의 선 중 가운데 선은 페이드아웃되고 상하 선이 45도 회전하여 완벽한 닫기 마크로 결합',
+        desc: '상하 라인이 대각선으로 교차 회전하며 완벽한 닫기(X) 아이콘으로 모핑됩니다.',
         tags: ['#Hamburger', '#Morphing', '#Icon'],
         render: renderSvgHamburger,
-        trigger: triggerSvgHamburger,
         export: getExportSvgHamburger
       },
       {
         id: 'metaball-liquid',
         domain: 'vector',
-        name: '유기적 액체 메타볼 (Metaball Liquid)',
+        name: '유기적 액체 메타볼 (Gooey)',
         tech: 'SVG feColorMatrix',
-        desc: '두 물방울이 분리되거나 만날 때 표면 장력으로 끈적하게 달라붙었다 떨어지는 액체 결합 효과',
+        desc: '두 방울이 만날 때 표면장력처럼 끈적하게 융합되었다가 분리되는 액체 필터 효과입니다.',
         tags: ['#Metaball', '#Liquid', '#Gooey'],
         render: renderMetaballLiquid,
-        trigger: triggerMetaballLiquid,
         export: getExportMetaballLiquid
       },
-
-      // Domain 6: Kinetic Typography
       {
         id: 'scramble-decoder',
         domain: 'typo',
         name: '해커 매트릭스 텍스트 디코더',
         tech: 'JS Glyph Array',
-        desc: '무작위 특수문자가 고속으로 전환되다가 왼쪽부터 하나씩 진짜 텍스트로 해독되는 사이버 연출',
+        desc: '무작위 암호 글리프가 고속으로 회전하다가 좌측부터 순차 해독되는 사이버펑크 텍스트입니다.',
         tags: ['#Scramble', '#Hacker', '#Typography'],
         render: renderScrambleDecoder,
-        trigger: triggerScrambleDecoder,
         export: getExportScrambleDecoder
       },
       {
         id: 'variable-font-wave',
         domain: 'typo',
-        name: '가변 폰트 (Variable Font) 축 변형',
-        tech: 'CSS font-variation',
-        desc: '마우스 위치에 따라 글자의 두께(wght 100~900)와 기울기(slnt)가 물결치듯 연속 변형',
+        name: '가변 폰트 (Variable Font) 웨이브',
+        tech: 'CSS Font Weight',
+        desc: '글자마다 굵기(Weight)와 스케일이 사인파(Sine Wave) 형태로 연속 물결치는 타이포그래피입니다.',
         tags: ['#VariableFont', '#Weight', '#Kinetic'],
         render: renderVariableFontWave,
-        trigger: triggerVariableFontWave,
         export: getExportVariableFontWave
       },
       {
         id: 'stagger-split-cascade',
         domain: 'typo',
-        name: '스플릿 글자 시차(Stagger) 캐스케이드',
+        name: '스플릿 글자 시차(Stagger) 리빌',
         tech: 'CSS Transition Delay',
-        desc: '문장을 글자별로 분해하여 각기 30ms 시차를 두고 회전하며 아래에서 떠오르는 시네마틱 타이틀',
+        desc: '문장을 글자 단위로 쪼개어 35ms 시차를 두고 아래에서 회전하며 솟아오르는 타이틀 효과입니다.',
         tags: ['#Stagger', '#Cascade', '#TextReveal'],
         render: renderStaggerSplitCascade,
-        trigger: triggerStaggerSplitCascade,
         export: getExportStaggerSplitCascade
       },
-
-      // Domain 7: Canvas & WebGL Particles
       {
         id: 'canvas-particle-repel',
         domain: 'canvas',
-        name: '마우스 반발 파티클 네트워크',
+        name: '터치/마우스 척력 파티클 네트',
         tech: 'HTML5 Canvas',
-        desc: '마우스가 다가오면 점들이 척력으로 흩어졌다가 원래 제자리로 스프링 복원되는 캔버스 시뮬레이션',
+        desc: '손가락이나 마우스가 다가가면 파티클들이 밀려났다가 스프링 탄성으로 제자리에 복원됩니다.',
         tags: ['#Canvas', '#Particles', '#Physics'],
         render: renderCanvasParticleRepel,
-        trigger: triggerCanvasParticleRepel,
         export: getExportCanvasParticleRepel
       },
       {
         id: 'neon-burst-shockwave',
         domain: 'canvas',
         name: '네온 파티클 버스트 & 충격파',
-        tech: 'Canvas 2D Burst',
-        desc: '클릭 지점에서 중력과 공기 저항을 받는 40여 개의 불꽃 파티클과 원형 충격파 링 생성',
+        tech: 'DOM/Canvas Burst',
+        desc: '클릭/터치한 지점에서 30개의 네온 입자와 원형 충격파 링이 사방으로 폭발합니다.',
         tags: ['#Burst', '#Confetti', '#Shockwave'],
         render: renderNeonBurst,
-        trigger: triggerNeonBurst,
         export: getExportNeonBurst
       },
-
-      // Domain 8: View Transitions
       {
         id: 'radial-wipe',
         domain: 'transition',
-        name: '방사형 서클 와이프 (Radial Wipe)',
+        name: '방사형 서클 와이프 전환',
         tech: 'CSS clip-path',
-        desc: '클릭한 버튼 지점을 중심으로 원형 클리핑 마스크가 화면 전체로 확산되며 새 페이지를 드러냄',
+        desc: '버튼 중심에서 원형 마스크(clip-path: circle)가 확산되며 다음 화면을 매끄럽게 노출합니다.',
         tags: ['#ClipPath', '#Wipe', '#Transition'],
         render: renderRadialWipe,
-        trigger: triggerRadialWipe,
         export: getExportRadialWipe
       },
       {
         id: 'room-3d-flip',
         domain: 'transition',
-        name: '3D 큐브 룸 전환 (Cube Room Flip)',
-        tech: 'CSS 3D Cube',
-        desc: '정육면체의 면이 회전하듯 이전 화면이 뒤로 넘어가고 다음 화면이 나타나는 입체 공간 전환',
+        name: '3D 양면 카드 룸 플립',
+        tech: 'CSS preserve-3d',
+        desc: '앞면(Front)과 뒷면(Back)이 분리된 3D 공간 카드가 글자 좌우 반전 없이 180도 회전합니다.',
         tags: ['#3D', '#Cube', '#RoomTransition'],
         render: renderRoom3DFlip,
-        trigger: triggerRoom3DFlip,
         export: getExportRoom3DFlip
       }
     ];
@@ -1025,36 +1000,42 @@
     /* 2. GLOBAL STATE & PARAMETER REGISTRY                     */
     /* ======================================================== */
     let currentAnimId = 'smooth-counter';
-    let viewMode = 'focus'; // 'focus' | 'split' | 'matrix'
+    let viewMode = 'focus';
     let isPlaying = true;
     let timeScale = 1.0;
-    let exportFormat = 'css'; // 'css' | 'waapi' | 'framer'
-    let currentCategoryFilter = 'all';
+    let exportFormat = 'css';
+    let activeTriggerFn = null;
 
-    // Global Tuner State
     const STATE = {
       duration: 1200,
       delay: 0,
-      repeat: '1',
-      direction: 'normal',
       stiffness: 120,
       damping: 14,
       mass: 1.0,
-      // Bezier control handles
       p1: { x: 0.16, y: 1.00 },
       p2: { x: 0.30, y: 1.00 },
-      // Custom pattern params
       startNum: 1,
       endNum: 2,
-      decimals: 0,
+      decimals: 2,
     };
 
+    function getBezierCSS() {
+      return `cubic-bezier(${STATE.p1.x.toFixed(2)}, ${STATE.p1.y.toFixed(2)}, ${STATE.p2.x.toFixed(2)}, ${STATE.p2.y.toFixed(2)})`;
+    }
+
+    function evaluateCubicBezier(t) {
+      // Approximate progress curve with user's P1.y / P2.y handles for JS RAF animations
+      const u = 1 - t;
+      return 3 * u * u * t * STATE.p1.y + 3 * u * t * t * STATE.p2.y + t * t * t;
+    }
+
     /* ======================================================== */
-    /* 3. NAVIGATION & DOMAIN TREE INITIALIZATION               */
+    /* 3. NAVIGATION & STAGE CONTROLLER                         */
     /* ======================================================== */
     function buildDomainNavTree() {
       const container = document.getElementById('domainNavTree');
       container.innerHTML = '';
+      document.getElementById('catalogCountBadge').innerText = `${CATALOG.length}종`;
 
       DOMAINS.forEach(dom => {
         const domItems = CATALOG.filter(item => item.domain === dom.id);
@@ -1063,28 +1044,31 @@
         const groupEl = document.createElement('div');
         groupEl.className = 'nav-domain-group mb-1.5';
 
-        const headerBtn = document.createElement('button');
-        headerBtn.className = 'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition text-left';
+        const headerBtn = document.createElement('div');
+        headerBtn.className = 'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-300 font-semibold text-xs';
         headerBtn.innerHTML = `
           <div class="flex items-center gap-2">
             <i data-lucide="${dom.icon}" class="w-3.5 h-3.5 text-accent-500"></i>
-            <span class="font-semibold text-xs">${dom.name}</span>
+            <span>${dom.name}</span>
           </div>
           <span class="text-[10px] font-mono text-slate-500">${domItems.length}</span>
         `;
 
         const listEl = document.createElement('div');
-        listEl.className = 'pl-5 pr-1 py-1 space-y-0.5';
+        listEl.className = 'pl-4 pr-1 py-0.5 space-y-0.5';
 
         domItems.forEach(item => {
           const itemBtn = document.createElement('button');
           itemBtn.setAttribute('data-id', item.id);
-          itemBtn.className = `w-full text-left px-2.5 py-1.5 rounded-md text-[11px] flex items-center justify-between transition ${item.id === currentAnimId ? 'bg-accent-600/25 text-indigo-300 font-semibold border border-accent-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`;
+          itemBtn.className = `w-full text-left px-2.5 py-1.5 rounded-md text-xs flex items-center justify-between transition ${item.id === currentAnimId ? 'bg-accent-600/25 text-indigo-300 font-semibold border border-accent-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`;
           itemBtn.innerHTML = `
             <span class="truncate">${item.name}</span>
-            <span class="text-[9px] font-mono px-1 py-0.2 rounded bg-dark-950 text-slate-500 border border-white/5 ml-1">${item.tech.split(' ')[0]}</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-dark-950 text-slate-400 border border-white/5 ml-1 shrink-0">${item.tech.split(' ')[0]}</span>
           `;
-          itemBtn.onclick = () => selectAnimation(item.id);
+          itemBtn.onclick = () => {
+            selectAnimation(item.id);
+            closeAllMobileDrawers();
+          };
           listEl.appendChild(itemBtn);
         });
 
@@ -1102,40 +1086,38 @@
 
       currentAnimId = id;
 
-      // Update Nav active style
       document.querySelectorAll('#domainNavTree button[data-id]').forEach(btn => {
         if (btn.getAttribute('data-id') === id) {
-          btn.className = 'w-full text-left px-2.5 py-1.5 rounded-md text-[11px] flex items-center justify-between transition bg-accent-600/25 text-indigo-300 font-semibold border border-accent-500/30';
+          btn.className = 'w-full text-left px-2.5 py-1.5 rounded-md text-xs flex items-center justify-between transition bg-accent-600/25 text-indigo-300 font-semibold border border-accent-500/30';
         } else {
-          btn.className = 'w-full text-left px-2.5 py-1.5 rounded-md text-[11px] flex items-center justify-between transition text-slate-400 hover:text-slate-200 hover:bg-white/5';
+          btn.className = 'w-full text-left px-2.5 py-1.5 rounded-md text-xs flex items-center justify-between transition text-slate-400 hover:text-slate-200 hover:bg-white/5';
         }
       });
 
-      // Update Stage Titles
       document.getElementById('stageCurrentTitle').innerHTML = `
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span>${item.name}</span>
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+        <span class="truncate">${item.name}</span>
       `;
       document.getElementById('stageTechBadge').innerText = item.tech;
+      document.getElementById('stageDescText').innerText = item.desc;
 
-      // Render Stage
       renderCurrentStage();
       updateGeneratedCode();
       playTone(650, 0.03);
     }
 
     function renderCurrentStage() {
+      cleanupActiveStage();
+
       const item = CATALOG.find(a => a.id === currentAnimId);
       if (!item) return;
 
       const stageEl = document.getElementById('activeAnimationStage');
       stageEl.innerHTML = '';
-      item.render(stageEl);
+      activeTriggerFn = item.render(stageEl, false);
 
-      // Also render A/B stage
       renderABStage(item);
 
-      // Render matrix if open
       if (viewMode === 'matrix') {
         renderMatrixView();
       }
@@ -1145,9 +1127,8 @@
     }
 
     function triggerActiveAnimationAction() {
-      const item = CATALOG.find(a => a.id === currentAnimId);
-      if (item && item.trigger) {
-        item.trigger();
+      if (typeof activeTriggerFn === 'function') {
+        activeTriggerFn();
         playTone(720, 0.04);
       }
     }
@@ -1155,112 +1136,117 @@
     /* ======================================================== */
     /* 4. A/B COMPARISON ENGINE                                 */
     /* ======================================================== */
+    let abSpringRaf = null;
+
     function renderABStage(item) {
       const stageA = document.getElementById('abStageA');
       const stageB = document.getElementById('abStageB');
-      stageA.innerHTML = '';
-      stageB.innerHTML = '';
+      if (!stageA || !stageB) return;
 
-      // Standard Ease Preview in A
-      const boxA = document.createElement('div');
-      boxA.id = 'abTargetElementA';
-      boxA.className = 'w-20 h-20 rounded-2xl bg-gradient-to-tr from-accent-600 to-indigo-500 shadow-xl flex items-center justify-center font-bold text-white text-xs text-center p-2';
-      boxA.innerText = 'Standard Cubic';
-      stageA.appendChild(boxA);
+      stageA.innerHTML = `
+        <div class="w-full max-w-xs space-y-3">
+          <div class="flex justify-between text-xs font-mono text-slate-400">
+            <span>Start (0%)</span>
+            <span id="abValA" class="text-indigo-300 font-bold">1.00</span>
+            <span>End (100%)</span>
+          </div>
+          <div class="w-full h-12 bg-dark-950 rounded-xl border border-white/10 p-1.5 flex items-center relative overflow-hidden">
+            <div id="abTargetElementA" class="w-9 h-9 rounded-lg bg-gradient-to-tr from-accent-600 to-indigo-400 shadow-lg flex items-center justify-center font-mono font-bold text-white text-xs">A</div>
+          </div>
+        </div>
+      `;
 
-      // Spring Preview in B
-      const boxB = document.createElement('div');
-      boxB.id = 'abTargetElementB';
-      boxB.className = 'w-20 h-20 rounded-2xl bg-gradient-to-tr from-cyan-600 to-accent-cyan shadow-xl flex items-center justify-center font-bold text-white text-xs text-center p-2';
-      boxB.innerText = 'Dynamic Spring';
-      stageB.appendChild(boxB);
+      stageB.innerHTML = `
+        <div class="w-full max-w-xs space-y-3">
+          <div class="flex justify-between text-xs font-mono text-slate-400">
+            <span>Start (0%)</span>
+            <span id="abValB" class="text-accent-cyan font-bold">1.00</span>
+            <span>End (100%)</span>
+          </div>
+          <div class="w-full h-12 bg-dark-950 rounded-xl border border-white/10 p-1.5 flex items-center relative overflow-hidden">
+            <div id="abTargetElementB" class="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyan-600 to-accent-cyan shadow-lg flex items-center justify-center font-mono font-bold text-white text-xs">B</div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('abCurveLabelA').innerText = getBezierCSS();
+      document.getElementById('abCurveLabelB').innerText = `Stiff: ${STATE.stiffness} / Damp: ${STATE.damping}`;
+      document.getElementById('abResultA').innerText = `${STATE.duration}ms`;
     }
 
     function triggerDualComparison() {
       const elA = document.getElementById('abTargetElementA');
       const elB = document.getElementById('abTargetElementB');
+      const valA = document.getElementById('abValA');
+      const valB = document.getElementById('abValB');
       if (!elA || !elB) return;
 
+      if (abSpringRaf) cancelAnimationFrame(abSpringRaf);
+
+      const trackWidth = elA.parentElement.clientWidth - 48;
       const durationMs = STATE.duration / timeScale;
 
-      // Reset
       elA.style.transition = 'none';
-      elA.style.transform = 'scale(0.8) translateY(20px)';
-      elB.style.transform = 'scale(0.8) translateY(20px)';
+      elA.style.transform = 'translateX(0px)';
+      elB.style.transform = 'translateX(0px)';
 
-      setTimeout(() => {
-        // Option A: CSS Cubic Bezier
-        elA.style.transition = `transform ${durationMs}ms cubic-bezier(${STATE.p1.x}, ${STATE.p1.y}, ${STATE.p2.x}, ${STATE.p2.y})`;
-        elA.style.transform = 'scale(1.1) translateY(-20px)';
-
-        // Option B: Real Spring Oscillation Simulation
-        simulateSpringElement(elB, {
-          targetScale: 1.1,
-          targetY: -20,
-          stiffness: STATE.stiffness,
-          damping: STATE.damping,
-          mass: STATE.mass
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          elA.style.transition = `transform ${durationMs}ms ${getBezierCSS()}`;
+          elA.style.transform = `translateX(${trackWidth}px)`;
         });
+      });
 
-        playTone(850, 0.06, 'triangle');
-      }, 50);
-    }
+      // Animate B with Hooke's Law + Counter
+      let pos = 0;
+      let vel = 0;
+      const target = trackWidth;
+      const startTime = performance.now();
 
-    function simulateSpringElement(element, config) {
-      let currentY = 20;
-      let velY = 0;
-      let currentScale = 0.8;
-      let velScale = 0;
-      const targetY = config.targetY;
-      const targetScale = config.targetScale;
-      const k = config.stiffness * 0.001;
-      const d = 1 - (config.damping * 0.02);
+      function step(now) {
+        const dt = Math.min((now - startTime) / durationMs, 1);
+        if (valA) valA.innerText = (1 + evaluateCubicBezier(dt)).toFixed(2);
 
-      let frameCount = 0;
-      function step() {
-        // Force Hooke: F = -k * x
-        const forceY = (targetY - currentY) * k;
-        velY = (velY + forceY) * d;
-        currentY += velY * timeScale;
+        const k = (STATE.stiffness / 1000) * timeScale;
+        const d = Math.max(0.7, 1 - (STATE.damping / 250));
+        const force = (target - pos) * k;
+        vel = (vel + force / STATE.mass) * d;
+        pos += vel;
 
-        const forceScale = (targetScale - currentScale) * k;
-        velScale = (velScale + forceScale) * d;
-        currentScale += velScale * timeScale;
+        elB.style.transform = `translateX(${pos}px)`;
+        if (valB && target > 0) valB.innerText = (1 + (pos / target)).toFixed(2);
 
-        element.style.transform = `scale(${currentScale}) translateY(${currentY}px)`;
-
-        if ((Math.abs(targetY - currentY) > 0.05 || Math.abs(velY) > 0.05) && frameCount < 400) {
-          frameCount++;
-          requestAnimationFrame(step);
+        if (Math.abs(target - pos) > 0.2 || Math.abs(vel) > 0.2 || dt < 1) {
+          abSpringRaf = requestAnimationFrame(step);
         } else {
-          element.style.transform = `scale(${targetScale}) translateY(${targetY}px)`;
+          elB.style.transform = `translateX(${target}px)`;
+          if (valA) valA.innerText = '2.00';
+          if (valB) valB.innerText = '2.00';
         }
       }
-      step();
+      abSpringRaf = requestAnimationFrame(step);
+      playTone(850, 0.06, 'triangle');
     }
 
     /* ======================================================== */
-    /* 5. MATRIX GRID VIEW                                      */
+    /* 5. MATRIX GRID VIEW (SCOPED WITHOUT ID COLLISION)        */
     /* ======================================================== */
     function renderMatrixView() {
       const container = document.getElementById('matrixGridContainer');
       container.innerHTML = '';
 
-      const activeItem = CATALOG.find(a => a.id === currentAnimId);
-      const itemsToShow = CATALOG.filter(a => a.domain === activeItem.domain);
-
-      itemsToShow.forEach(item => {
+      CATALOG.forEach(item => {
         const card = document.createElement('div');
-        card.className = 'panel-interactive rounded-xl p-4 flex flex-col justify-between h-[240px] cursor-pointer relative';
+        card.className = `panel-interactive rounded-xl p-4 flex flex-col justify-between min-h-[190px] cursor-pointer relative ${item.id === currentAnimId ? 'ring-2 ring-accent-500' : ''}`;
         card.innerHTML = `
-          <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center justify-between gap-2 mb-2">
             <span class="text-xs font-bold text-white truncate">${item.name}</span>
-            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-dark-950 text-indigo-400 border border-indigo-500/20">${item.tech}</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-dark-950 text-indigo-400 border border-indigo-500/20 shrink-0">${item.tech.split(' ')[0]}</span>
           </div>
-          <div class="matrix-card-preview flex-1 flex items-center justify-center overflow-hidden py-2" id="matrixPreview-${item.id}"></div>
-          <div class="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
-            <span class="truncate max-w-[180px]">${item.tags.join(' ')}</span>
-            <span class="text-accent-500 font-semibold hover:underline">상세 조작 &rarr;</span>
+          <p class="text-[11px] text-slate-400 line-clamp-2 my-auto">${item.desc}</p>
+          <div class="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
+            <span class="truncate font-mono text-[10px] text-slate-500">${item.tags.join(' ')}</span>
+            <span class="text-accent-500 font-semibold shrink-0">열기 &rarr;</span>
           </div>
         `;
         card.onclick = () => {
@@ -1268,16 +1254,12 @@
           selectAnimation(item.id);
         };
         container.appendChild(card);
-
-        // mini render
-        const previewWrap = card.querySelector(`#matrixPreview-${item.id}`);
-        item.render(previewWrap);
       });
       lucide.createIcons();
     }
 
     /* ======================================================== */
-    /* 6. TIMELINE SCRUBBER & GLOBAL SPEED ENGINE               */
+    /* 6. UNIVERSAL TIMELINE SCRUBBER ENGINE                    */
     /* ======================================================== */
     let scrubProgress = 0;
 
@@ -1290,12 +1272,18 @@
       document.getElementById('timeCurrentDisplay').innerText = formatMsToTime(currentMs);
       document.getElementById('timeTotalDisplay').innerText = formatMsToTime(totalMs);
 
-      // Apply scrub to active stage if it has a scrub hook
-      const stageEl = document.getElementById('activeAnimationStage');
-      const scrubbableEl = stageEl.querySelector('[data-scrubbable]');
-      if (scrubbableEl) {
-        scrubbableEl.style.transform = `rotate(${scrubProgress * 360}deg) scale(${0.8 + scrubProgress * 0.4})`;
+      if (typeof activeScrubHandler === 'function') {
+        activeScrubHandler(scrubProgress);
       }
+    }
+
+    function updateScrubberUIOnly(progress) {
+      const clamped = Math.max(0, Math.min(1, progress));
+      const scrubber = document.getElementById('timelineScrubber');
+      if (scrubber) scrubber.value = Math.round(clamped * 1000);
+      document.getElementById('scrubberFillBar').style.width = `${clamped * 100}%`;
+      document.getElementById('timeCurrentDisplay').innerText = formatMsToTime(Math.round(STATE.duration * clamped));
+      document.getElementById('timeTotalDisplay').innerText = formatMsToTime(STATE.duration);
     }
 
     function formatMsToTime(ms) {
@@ -1312,6 +1300,7 @@
       if (isPlaying) {
         icon.setAttribute('data-lucide', 'pause');
         icon.className = 'w-4 h-4 text-emerald-400';
+        triggerActiveAnimationAction();
       } else {
         icon.setAttribute('data-lucide', 'play');
         icon.className = 'w-4 h-4 text-amber-400';
@@ -1335,9 +1324,7 @@
     }
 
     function restartActiveMotion() {
-      const scrubber = document.getElementById('timelineScrubber');
-      scrubber.value = 0;
-      onTimelineScrub(0);
+      updateScrubberUIOnly(0);
       triggerActiveAnimationAction();
     }
 
@@ -1348,14 +1335,16 @@
       viewMode = mode;
       document.getElementById('viewContainer-focus').classList.toggle('hidden', mode !== 'focus');
       document.getElementById('viewContainer-split').classList.toggle('hidden', mode !== 'split');
+      document.getElementById('viewContainer-split').classList.toggle('flex', mode === 'split');
       document.getElementById('viewContainer-matrix').classList.toggle('hidden', mode !== 'matrix');
 
       ['focus', 'split', 'matrix'].forEach(m => {
         const btn = document.getElementById(`viewBtn-${m}`);
+        if (!btn) return;
         if (m === mode) {
-          btn.className = 'px-2.5 py-1 rounded-md text-xs font-medium transition bg-accent-600 text-white shadow-sm flex items-center gap-1.5';
+          btn.className = 'px-2.5 py-1 rounded-md text-xs font-medium transition bg-accent-600 text-white shadow-sm flex items-center gap-1';
         } else {
-          btn.className = 'px-2.5 py-1 rounded-md text-xs font-medium transition text-slate-400 hover:text-white flex items-center gap-1.5';
+          btn.className = 'px-2.5 py-1 rounded-md text-xs font-medium transition text-slate-400 hover:text-white flex items-center gap-1';
         }
       });
 
@@ -1364,6 +1353,7 @@
       } else if (mode === 'split') {
         const item = CATALOG.find(a => a.id === currentAnimId);
         renderABStage(item);
+        setTimeout(triggerDualComparison, 80);
       }
       lucide.createIcons();
     }
@@ -1382,8 +1372,7 @@
     }
 
     function toggleCheckerBackground() {
-      const wrapper = document.getElementById('stageCanvasWrapper');
-      wrapper.classList.toggle('bg-checker');
+      document.getElementById('stageCanvasWrapper').classList.toggle('bg-checker');
       playTone(500, 0.02);
     }
 
@@ -1391,10 +1380,10 @@
       document.body.classList.toggle('debug-wireframe');
       const btn = document.getElementById('wireframeToggleBtn');
       if (document.body.classList.contains('debug-wireframe')) {
-        btn.classList.add('text-pink-400', 'bg-pink-500/20');
-        showToast('와이어프레임 디버거 ON', '모든 컴포넌트의 레이아웃 경계선을 시각화합니다.');
+        if (btn) btn.classList.add('text-pink-400', 'bg-pink-500/20');
+        showToast('와이어프레임 디버거 ON', '모든 요소의 바운딩 박스를 표시합니다.');
       } else {
-        btn.classList.remove('text-pink-400', 'bg-pink-500/20');
+        if (btn) btn.classList.remove('text-pink-400', 'bg-pink-500/20');
       }
     }
 
@@ -1406,9 +1395,9 @@
         document.getElementById(`inspectorTab-${t}`).classList.toggle('hidden', t !== tabId);
         const btn = document.getElementById(`tabBtn-${t}`);
         if (t === tabId) {
-          btn.className = 'inspector-tab-btn active flex-1 py-1.5 rounded-md text-xs font-semibold text-center transition bg-accent-600/20 text-indigo-300 border border-accent-500/30 flex items-center justify-center gap-1.5';
+          btn.className = 'inspector-tab-btn active flex-1 py-1.5 rounded-md text-xs font-semibold text-center transition bg-accent-600/20 text-indigo-300 border border-accent-500/30 flex items-center justify-center gap-1';
         } else {
-          btn.className = 'inspector-tab-btn flex-1 py-1.5 rounded-md text-xs font-medium text-center text-slate-400 hover:text-white transition border border-transparent flex items-center justify-center gap-1.5';
+          btn.className = 'inspector-tab-btn flex-1 py-1.5 rounded-md text-xs font-medium text-center text-slate-400 hover:text-white transition border border-transparent flex items-center justify-center gap-1';
         }
       });
       if (tabId === 'tuner') drawBezierInspectors();
@@ -1424,8 +1413,12 @@
         else if (key === 'mass') label.innerText = `${val} kg`;
         else label.innerText = val;
       }
+      document.getElementById('timeTotalDisplay').innerText = formatMsToTime(STATE.duration);
       updateCurveLabels();
       updateGeneratedCode();
+      if (viewMode === 'split') {
+        renderABStage();
+      }
     }
 
     function setExportFormat(fmt) {
@@ -1433,9 +1426,9 @@
       ['css', 'waapi', 'framer'].forEach(f => {
         const btn = document.getElementById(`exportFmt-${f}`);
         if (f === fmt) {
-          btn.className = 'py-1 rounded bg-dark-800 text-indigo-300 text-center font-bold';
+          btn.className = 'py-1.5 rounded bg-dark-800 text-indigo-300 text-center font-bold';
         } else {
-          btn.className = 'py-1 rounded text-slate-400 text-center hover:text-white';
+          btn.className = 'py-1.5 rounded text-slate-400 text-center hover:text-white';
         }
       });
       updateGeneratedCode();
@@ -1444,23 +1437,19 @@
     function updateGeneratedCode() {
       const item = CATALOG.find(a => a.id === currentAnimId);
       if (!item || !item.export) return;
-
-      const code = item.export(exportFormat, STATE);
-      document.getElementById('generatedCodeArea').innerText = code;
+      document.getElementById('generatedCodeArea').innerText = item.export(exportFormat, STATE);
     }
 
     function copyGeneratedCode() {
-      const code = document.getElementById('generatedCodeArea').innerText;
-      copyToClipboard(code);
+      copyToClipboard(document.getElementById('generatedCodeArea').innerText);
     }
 
     function copyBezierString() {
-      const str = `cubic-bezier(${STATE.p1.x.toFixed(2)}, ${STATE.p1.y.toFixed(2)}, ${STATE.p2.x.toFixed(2)}, ${STATE.p2.y.toFixed(2)})`;
-      copyToClipboard(str);
+      copyToClipboard(getBezierCSS());
     }
 
     /* ======================================================== */
-    /* 9. INTERACTIVE BEZIER CANVAS LOGIC                       */
+    /* 9. UNIFIED POINTER/TOUCH BEZIER CANVAS                   */
     /* ======================================================== */
     const bCanvas = document.getElementById('inspectorBezierCanvas');
     const bCtx = bCanvas.getContext('2d');
@@ -1470,23 +1459,19 @@
       if (!bCanvas) return;
       const w = bCanvas.width;
       const h = bCanvas.height;
-      const pad = 40;
+      const pad = 36;
       const plotW = w - pad * 2;
       const plotH = h - pad * 2;
 
       function toX(v) { return pad + v * plotW; }
       function toY(v) { return pad + (1 - v) * plotH; }
-      function normX(sx) { return Math.max(0, Math.min(1, (sx - pad) / plotW)); }
-      function normY(sy) { return 1 - (sy - pad) / plotH; }
 
       bCtx.clearRect(0, 0, w, h);
 
-      // Grid box
       bCtx.strokeStyle = 'rgba(255,255,255,0.08)';
       bCtx.lineWidth = 1;
       bCtx.strokeRect(pad, pad, plotW, plotH);
 
-      // Diagonal
       bCtx.beginPath();
       bCtx.setLineDash([2, 3]);
       bCtx.strokeStyle = 'rgba(255,255,255,0.15)';
@@ -1495,9 +1480,8 @@
       bCtx.stroke();
       bCtx.setLineDash([]);
 
-      // Control Lines
       bCtx.beginPath();
-      bCtx.strokeStyle = 'rgba(99, 102, 241, 0.4)';
+      bCtx.strokeStyle = 'rgba(99, 102, 241, 0.45)';
       bCtx.lineWidth = 1.5;
       bCtx.moveTo(toX(0), toY(0));
       bCtx.lineTo(toX(STATE.p1.x), toY(STATE.p1.y));
@@ -1505,7 +1489,6 @@
       bCtx.lineTo(toX(STATE.p2.x), toY(STATE.p2.y));
       bCtx.stroke();
 
-      // Bezier Curve
       bCtx.beginPath();
       bCtx.strokeStyle = '#6366f1';
       bCtx.lineWidth = 3;
@@ -1517,10 +1500,9 @@
       );
       bCtx.stroke();
 
-      // Handles
       function drawPt(pt, col) {
         bCtx.beginPath();
-        bCtx.arc(toX(pt.x), toY(pt.y), 6, 0, Math.PI * 2);
+        bCtx.arc(toX(pt.x), toY(pt.y), 7, 0, Math.PI * 2);
         bCtx.fillStyle = col;
         bCtx.fill();
         bCtx.lineWidth = 2;
@@ -1530,12 +1512,10 @@
       drawPt(STATE.p1, '#818cf8');
       drawPt(STATE.p2, '#06b6d4');
 
-      // Update text
-      const bezierStr = `cubic-bezier(${STATE.p1.x.toFixed(2)}, ${STATE.p1.y.toFixed(2)}, ${STATE.p2.x.toFixed(2)}, ${STATE.p2.y.toFixed(2)})`;
+      const bezierStr = getBezierCSS();
       document.getElementById('bezierParamString').innerText = bezierStr;
       document.getElementById('curveEquationLabel').innerText = bezierStr;
 
-      // Draw Mini Thumbnail
       drawMiniCurve();
     }
 
@@ -1582,12 +1562,14 @@
       drawBezierInspectors();
     }
 
-    // Bezier Drag Listeners
-    bCanvas.addEventListener('mousedown', (e) => {
+    // Unified Pointer Events for Touch & Mouse on Bezier Pad
+    bCanvas.addEventListener('pointerdown', (e) => {
       const rect = bCanvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const pad = 40;
+      const scaleX = bCanvas.width / rect.width;
+      const scaleY = bCanvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      const pad = 36;
       const plotW = bCanvas.width - pad * 2;
       const plotH = bCanvas.height - pad * 2;
       const p1x = pad + STATE.p1.x * plotW;
@@ -1595,21 +1577,24 @@
       const p2x = pad + STATE.p2.x * plotW;
       const p2y = pad + (1 - STATE.p2.y) * plotH;
 
-      if (Math.hypot(x - p1x, y - p1y) < 18) draggingHandle = 'p1';
-      else if (Math.hypot(x - p2x, y - p2y) < 18) draggingHandle = 'p2';
+      if (Math.hypot(x - p1x, y - p1y) < 24) draggingHandle = 'p1';
+      else if (Math.hypot(x - p2x, y - p2y) < 24) draggingHandle = 'p2';
+      if (draggingHandle) bCanvas.setPointerCapture(e.pointerId);
     });
 
-    window.addEventListener('mousemove', (e) => {
+    bCanvas.addEventListener('pointermove', (e) => {
       if (!draggingHandle) return;
       const rect = bCanvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const pad = 40;
+      const scaleX = bCanvas.width / rect.width;
+      const scaleY = bCanvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      const pad = 36;
       const plotW = bCanvas.width - pad * 2;
       const plotH = bCanvas.height - pad * 2;
 
       const normX = Math.max(0, Math.min(1, (x - pad) / plotW));
-      const normY = parseFloat((1 - (y - pad) / plotH).toFixed(2));
+      const normY = Math.max(-0.6, Math.min(1.6, parseFloat((1 - (y - pad) / plotH).toFixed(2))));
 
       if (draggingHandle === 'p1') {
         STATE.p1.x = normX;
@@ -1622,7 +1607,13 @@
       updateGeneratedCode();
     });
 
-    window.addEventListener('mouseup', () => { draggingHandle = null; });
+    bCanvas.addEventListener('pointerup', (e) => {
+      if (draggingHandle) {
+        bCanvas.releasePointerCapture(e.pointerId);
+        draggingHandle = null;
+        triggerActiveAnimationAction();
+      }
+    });
 
     /* ======================================================== */
     /* 10. REAL-TIME FPS & TELEMETRY MONITOR                    */
@@ -1641,10 +1632,8 @@
 
         const avgFps = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
         const fpsEl = document.getElementById('fpsCounter');
-        if (fpsEl && frameTimes.length % 5 === 0) {
+        if (fpsEl && frameTimes.length % 6 === 0) {
           fpsEl.innerText = Math.min(120, avgFps).toFixed(1);
-          if (avgFps < 45) fpsEl.className = 'font-display font-bold text-3xl text-amber-400';
-          else fpsEl.className = 'font-display font-bold text-3xl text-emerald-400';
         }
       }
       requestAnimationFrame(updateTelemetryLoop);
@@ -1652,7 +1641,7 @@
     requestAnimationFrame(updateTelemetryLoop);
 
     /* ======================================================== */
-    /* 11. COMMAND PALETTE (CMD + K) SEARCH                     */
+    /* 11. COMMAND PALETTE & SEARCH                             */
     /* ======================================================== */
     function toggleCommandPalette(show) {
       const modal = document.getElementById('commandPaletteModal');
@@ -1683,13 +1672,13 @@
 
       filtered.forEach(item => {
         const row = document.createElement('button');
-        row.className = 'w-full text-left p-2.5 rounded-lg hover:bg-white/5 flex items-center justify-between text-xs transition border border-transparent hover:border-white/5';
+        row.className = 'w-full text-left p-2.5 rounded-lg hover:bg-white/5 flex items-center justify-between text-xs transition';
         row.innerHTML = `
-          <div>
+          <div class="pr-2">
             <div class="font-bold text-white">${item.name}</div>
             <div class="text-[11px] text-slate-400 mt-0.5">${item.desc}</div>
           </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-dark-950 text-indigo-300 border border-indigo-500/30">${item.tech}</span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-dark-950 text-indigo-300 border border-indigo-500/30 shrink-0">${item.tech}</span>
         `;
         row.onclick = () => {
           toggleCommandPalette(false);
@@ -1706,6 +1695,7 @@
       }
       if (e.key === 'Escape') {
         toggleCommandPalette(false);
+        closeAllMobileDrawers();
       }
       if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
         e.preventDefault();
@@ -1727,9 +1717,9 @@
     function filterByTech(tech) {
       document.querySelectorAll('.tech-filter-badge').forEach(b => {
         if (b.innerText === (tech === 'all' ? '전체' : tech)) {
-          b.className = 'tech-filter-badge active px-2 py-0.5 rounded text-[10px] bg-accent-600/30 text-indigo-300 border border-accent-500/40';
+          b.className = 'tech-filter-badge active px-2 py-0.5 rounded text-[11px] bg-accent-600/30 text-indigo-300 border border-accent-500/40';
         } else {
-          b.className = 'tech-filter-badge px-2 py-0.5 rounded text-[10px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5';
+          b.className = 'tech-filter-badge px-2 py-0.5 rounded text-[11px] bg-dark-800 text-slate-400 hover:text-slate-200 border border-white/5';
         }
       });
 
@@ -1737,1107 +1727,1121 @@
         const id = btn.getAttribute('data-id');
         const item = CATALOG.find(a => a.id === id);
         if (!item) return;
-        if (tech === 'all') {
-          btn.classList.remove('hidden');
-        } else {
-          btn.classList.toggle('hidden', !item.tech.includes(tech));
-        }
+        btn.classList.toggle('hidden', tech !== 'all' && !item.tech.includes(tech));
       });
     }
 
     /* ======================================================== */
-    /* 12. ANIMATION HANDLERS (DOMAINS 1 TO 8 IMPLEMENTATIONS)  */
+    /* 12. SCOPED & BUG-FREE ANIMATION HANDLERS (ALL 22 ITEMS)  */
     /* ======================================================== */
 
-    // -----------------------------------------------------------
-    // 1-1. SMOOTH NUMBER COUNTER (1에서 2로 천천히 변화)
-    // -----------------------------------------------------------
-    let counterRafId = null;
-
+    // 1-1. SMOOTH NUMBER COUNTER (1 -> 2, Scrubbable)
     function renderSmoothCounter(container) {
       container.innerHTML = `
-        <div class="flex flex-col items-center justify-center p-6 bg-dark-950/60 rounded-2xl border border-white/5 relative w-full max-w-md">
-          <div class="text-[11px] font-mono text-slate-500 mb-2">실시간 수치 보간 (Interpolation)</div>
-          <div class="font-display font-extrabold text-6xl sm:text-7xl text-white flex items-baseline justify-center tracking-tight select-none">
-            <span class="text-indigo-400 text-4xl mr-1 font-normal">#</span>
-            <span id="counterTargetVal" class="text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-accent-cyan">1</span>
+        <div class="flex flex-col items-center justify-center p-5 sm:p-6 bg-dark-950/70 rounded-2xl border border-white/10 w-full max-w-md">
+          <div class="text-xs font-mono text-slate-400 mb-2">실시간 수치 보간 (Interpolation)</div>
+          <div class="font-display font-extrabold text-5xl sm:text-6xl text-white flex items-baseline justify-center tracking-tight">
+            <span class="text-indigo-400 text-3xl mr-1.5 font-normal">#</span>
+            <span class="counter-val text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-accent-cyan">1.00</span>
           </div>
-          <div class="w-full h-2 bg-dark-800 rounded-full mt-6 overflow-hidden">
-            <div id="counterBar" class="h-full bg-gradient-to-r from-accent-600 to-accent-cyan rounded-full transition-all duration-75 w-0"></div>
+          <div class="w-full h-2.5 bg-dark-800 rounded-full mt-5 overflow-hidden">
+            <div class="counter-bar h-full bg-gradient-to-r from-accent-600 to-accent-cyan rounded-full w-0"></div>
           </div>
-          <div class="mt-4 flex gap-2">
-            <button onclick="setCounterRange(1, 2)" class="px-3 py-1 rounded bg-dark-800 hover:bg-dark-700 text-indigo-300 text-xs border border-white/5 font-mono">1 &rarr; 2</button>
-            <button onclick="setCounterRange(0, 100)" class="px-3 py-1 rounded bg-dark-800 hover:bg-dark-700 text-slate-300 text-xs border border-white/5 font-mono">0 &rarr; 100</button>
-            <button onclick="setCounterRange(1200, 48500)" class="px-3 py-1 rounded bg-dark-800 hover:bg-dark-700 text-slate-300 text-xs border border-white/5 font-mono">1.2k &rarr; 48.5k</button>
+          <div class="mt-4 flex flex-wrap justify-center gap-2">
+            <button data-range="1,2,2" class="range-btn px-3 py-1.5 rounded-lg bg-accent-600/20 text-indigo-300 text-xs border border-accent-500/30 font-mono">1.00 &rarr; 2.00</button>
+            <button data-range="0,100,0" class="range-btn px-3 py-1.5 rounded-lg bg-dark-800 hover:bg-dark-700 text-slate-300 text-xs border border-white/5 font-mono">0 &rarr; 100</button>
+            <button data-range="1000,9999,0" class="range-btn px-3 py-1.5 rounded-lg bg-dark-800 hover:bg-dark-700 text-slate-300 text-xs border border-white/5 font-mono">1,000 &rarr; 9,999</button>
           </div>
         </div>
       `;
-      triggerSmoothCounter();
-    }
 
-    function setCounterRange(s, e) {
-      STATE.startNum = s;
-      STATE.endNum = e;
-      triggerSmoothCounter();
-    }
+      const valEl = container.querySelector('.counter-val');
+      const barEl = container.querySelector('.counter-bar');
+      let rafId = null;
 
-    function triggerSmoothCounter() {
-      if (counterRafId) cancelAnimationFrame(counterRafId);
-      const valEl = document.getElementById('counterTargetVal');
-      const barEl = document.getElementById('counterBar');
-      if (!valEl) return;
-
-      const start = STATE.startNum;
-      const end = STATE.endNum;
-      const duration = STATE.duration / timeScale;
-      let startTime = null;
-
-      function step(timestamp) {
-        if (!startTime) startTime = timestamp;
-        const elapsed = timestamp - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-
-        // Cubic-Bezier easing evaluation
-        const eased = (progress === 1) ? 1 : 1 - Math.pow(2, -10 * progress);
-        const current = start + (end - start) * eased;
-
+      function applyAtProgress(p) {
+        const eased = evaluateCubicBezier(p);
+        const current = STATE.startNum + (STATE.endNum - STATE.startNum) * eased;
         valEl.innerText = current.toLocaleString('ko-KR', {
           minimumFractionDigits: STATE.decimals,
           maximumFractionDigits: STATE.decimals
         });
-        if (barEl) barEl.style.width = `${progress * 100}%`;
-
-        if (progress < 1) {
-          counterRafId = requestAnimationFrame(step);
-        } else {
-          valEl.innerText = end.toLocaleString('ko-KR');
-        }
+        barEl.style.width = `${Math.max(0, Math.min(100, p * 100))}%`;
       }
-      counterRafId = requestAnimationFrame(step);
+
+      activeScrubHandler = applyAtProgress;
+
+      function runCounter() {
+        if (rafId) cancelAnimationFrame(rafId);
+        const duration = STATE.duration / timeScale;
+        let startTime = null;
+
+        function step(timestamp) {
+          if (!startTime) startTime = timestamp;
+          const progress = Math.min((timestamp - startTime) / duration, 1);
+          applyAtProgress(progress);
+          updateScrubberUIOnly(progress);
+          if (progress < 1 && isPlaying) {
+            rafId = requestAnimationFrame(step);
+          }
+        }
+        rafId = requestAnimationFrame(step);
+      }
+
+      container.querySelectorAll('.range-btn').forEach(btn => {
+        btn.onclick = () => {
+          const [s, e, dec] = btn.getAttribute('data-range').split(',').map(Number);
+          STATE.startNum = s;
+          STATE.endNum = e;
+          STATE.decimals = dec;
+          runCounter();
+        };
+      });
+
+      registerCleanup(() => { if (rafId) cancelAnimationFrame(rafId); });
+      runCounter();
+      return runCounter;
     }
 
     function getExportSmoothCounter(fmt, s) {
       if (fmt === 'css') {
-        return `/* CSS Counter 애니메이션은 @property Houdini로 지원됩니다 */
-@property --num {
-  syntax: '<integer>';
-  initial-value: 1;
+        return `@property --num {
+  syntax: '<number>';
+  initial-value: ${s.startNum};
   inherits: false;
 }
-.counter-box {
-  transition: --num ${s.duration}ms cubic-bezier(${s.p1.x}, ${s.p1.y}, ${s.p2.x}, ${s.p2.y});
-  counter-set: num var(--num);
-}
-.counter-box::after {
-  content: counter(num);
+.counter {
+  transition: --num ${s.duration}ms cubic-bezier(${s.p1.x.toFixed(2)}, ${s.p1.y.toFixed(2)}, ${s.p2.x.toFixed(2)}, ${s.p2.y.toFixed(2)});
 }`;
-      } else {
-        return `// JS requestAnimationFrame 부드러운 수치 전환 함수
-function animateCounter(el, start, end, duration = ${s.duration}) {
+      }
+      return `function animateCounter(el, start = ${s.startNum}, end = ${s.endNum}, duration = ${s.duration}) {
   let startTime = null;
-  const easeOutExpo = t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-
-  function step(time) {
-    if (!startTime) startTime = time;
-    const progress = Math.min((time - startTime) / duration, 1);
-    const val = start + (end - start) * easeOutExpo(progress);
-    el.innerText = Math.round(val).toLocaleString();
-    if (progress < 1) requestAnimationFrame(step);
+  function step(now) {
+    if (!startTime) startTime = now;
+    const p = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(2, -10 * p);
+    el.textContent = (start + (end - start) * eased).toFixed(${s.decimals});
+    if (p < 1) requestAnimationFrame(step);
   }
   requestAnimationFrame(step);
-}
-// animateCounter(myElement, 1, 2);`;
-      }
+}`;
     }
 
-    // -----------------------------------------------------------
-    // 1-2. MORPH BUTTON (다운로드 -> 로딩 스피너 -> 체크마크)
-    // -----------------------------------------------------------
-    let morphTimer = null;
-
+    // 1-2. MORPH BUTTON
     function renderMorphButton(container) {
       container.innerHTML = `
         <div class="flex flex-col items-center justify-center">
-          <button id="demoMorphBtn" onclick="triggerMorphButton()" class="h-12 px-7 rounded-xl bg-accent-600 hover:bg-accent-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-xl shadow-accent-600/30 transition-all duration-300 min-w-[170px] select-none">
-            <i data-lucide="download" id="morphDemoIcon" class="w-4 h-4"></i>
-            <span id="morphDemoLabel">클릭하여 시작</span>
+          <button class="morph-btn h-12 px-7 rounded-xl bg-accent-600 hover:bg-accent-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-xl shadow-accent-600/30 transition-all duration-300 min-w-[180px]">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>파일 다운로드</span>
           </button>
-          <span class="text-xs text-slate-500 mt-4">클릭 시 [기본] &rarr; [원형 로딩] &rarr; [성공 체크] 순차 모핑</span>
+          <span class="text-xs text-slate-400 mt-4">클릭 시 [기본] &rarr; [스피너] &rarr; [체크 완료] 3단 변형</span>
         </div>
       `;
-    }
+      const btn = container.querySelector('.morph-btn');
+      let t1 = null, t2 = null;
 
-    function triggerMorphButton() {
-      const btn = document.getElementById('demoMorphBtn');
-      const icon = document.getElementById('morphDemoIcon');
-      const label = document.getElementById('morphDemoLabel');
-      if (!btn) return;
-
-      if (morphTimer) clearTimeout(morphTimer);
-
-      // Phase 1: Spinner
-      btn.className = 'h-12 px-6 rounded-full bg-dark-800 text-white font-semibold text-xs flex items-center justify-center gap-2 border border-white/20 min-w-[140px] transition-all duration-300';
-      icon.setAttribute('data-lucide', 'loader-2');
-      icon.className = 'w-4 h-4 animate-spin text-accent-cyan';
-      label.innerText = '처리 중...';
-      lucide.createIcons();
-      playTone(600, 0.05);
-
-      // Phase 2: Checkmark
-      morphTimer = setTimeout(() => {
-        btn.className = 'h-12 px-6 rounded-xl bg-emerald-600 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 min-w-[150px] transition-all duration-300';
-        icon.setAttribute('data-lucide', 'check');
-        icon.className = 'w-4 h-4 text-white';
-        label.innerText = '완료되었습니다!';
+      function trigger() {
+        clearTimeout(t1); clearTimeout(t2);
+        btn.className = 'morph-btn h-12 w-12 rounded-full bg-dark-800 text-accent-cyan font-semibold text-xs flex items-center justify-center border border-accent-cyan/40 transition-all duration-300';
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>`;
         lucide.createIcons();
-        playTone(1100, 0.08, 'triangle');
 
-        // Reset
-        morphTimer = setTimeout(() => {
-          btn.className = 'h-12 px-7 rounded-xl bg-accent-600 hover:bg-accent-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-xl shadow-accent-600/30 min-w-[170px] transition-all duration-300';
-          icon.setAttribute('data-lucide', 'download');
-          icon.className = 'w-4 h-4';
-          label.innerText = '다시 실행';
+        t1 = setTimeout(() => {
+          btn.className = 'morph-btn h-12 px-6 rounded-xl bg-emerald-600 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 min-w-[160px] transition-all duration-300 scale-105';
+          btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>전송 완료!</span>`;
           lucide.createIcons();
-        }, 2000 / timeScale);
-      }, 1600 / timeScale);
+          playTone(1050, 0.07, 'triangle');
+
+          t2 = setTimeout(() => {
+            btn.className = 'morph-btn h-12 px-7 rounded-xl bg-accent-600 hover:bg-accent-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-xl shadow-accent-600/30 transition-all duration-300 min-w-[180px]';
+            btn.innerHTML = `<i data-lucide="download" class="w-4 h-4"></i><span>파일 다운로드</span>`;
+            lucide.createIcons();
+          }, 1600 / timeScale);
+        }, (STATE.duration * 0.6) / timeScale);
+      }
+
+      btn.onclick = trigger;
+      registerCleanup(() => { clearTimeout(t1); clearTimeout(t2); });
+      return trigger;
     }
 
     function getExportMorphButton(fmt, s) {
-      return `/* State Morphing Button CSS */
-.morph-btn {
-  height: 48px;
-  border-radius: 12px;
-  transition: all ${s.duration}ms cubic-bezier(${s.p1.x}, ${s.p1.y}, ${s.p2.x}, ${s.p2.y});
-}
-.morph-btn.is-loading {
-  border-radius: 9999px;
-  background-color: #17202f;
-}
-.morph-btn.is-success {
-  background-color: #10b981;
+      return `.morph-btn {
+  transition: all ${s.duration}ms cubic-bezier(${s.p1.x.toFixed(2)}, ${s.p1.y.toFixed(2)}, ${s.p2.x.toFixed(2)}, ${s.p2.y.toFixed(2)});
 }`;
     }
 
-    // -----------------------------------------------------------
     // 1-3. JELLY SPRING TOGGLE
-    // -----------------------------------------------------------
     function renderJellyToggle(container) {
       container.innerHTML = `
         <div class="flex flex-col items-center justify-center">
-          <label class="cursor-pointer select-none">
-            <input type="checkbox" id="jellyToggleInput" class="sr-only peer" onchange="playTone(880, 0.04)">
-            <div class="w-24 h-12 bg-dark-800 rounded-full peer-checked:bg-emerald-500 transition-colors duration-300 relative p-1.5 shadow-inner border border-white/10">
-              <div class="w-9 h-9 bg-white rounded-full shadow-lg transform transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] peer-checked:translate-x-12 flex items-center justify-center">
-                <i data-lucide="check" class="w-4 h-4 text-emerald-600 opacity-0 peer-checked:opacity-100 transition-opacity"></i>
-              </div>
+          <button class="jelly-track w-24 h-12 bg-dark-800 rounded-full p-1.5 relative transition-colors duration-300 border border-white/10 flex items-center">
+            <div class="jelly-thumb w-9 h-9 bg-white rounded-full shadow-lg flex items-center justify-center transition-transform duration-500" style="transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);">
+              <span class="w-2.5 h-2.5 rounded-full bg-slate-400 jelly-dot transition-colors"></span>
             </div>
-          </label>
-          <span class="text-xs text-slate-400 mt-4 font-mono">cubic-bezier(0.34, 1.56, 0.64, 1)</span>
+          </button>
+          <span class="text-xs text-slate-400 mt-4">클릭 또는 터치하여 젤리 오버슈트 확인</span>
         </div>
       `;
-    }
+      const track = container.querySelector('.jelly-track');
+      const thumb = container.querySelector('.jelly-thumb');
+      const dot = container.querySelector('.jelly-dot');
+      let checked = false;
 
-    function triggerJellyToggle() {
-      const input = document.getElementById('jellyToggleInput');
-      if (input) {
-        input.checked = !input.checked;
-        playTone(input.checked ? 900 : 600, 0.05);
+      function toggle() {
+        checked = !checked;
+        track.classList.toggle('bg-emerald-500', checked);
+        track.classList.toggle('bg-dark-800', !checked);
+        dot.classList.toggle('bg-emerald-500', checked);
+        dot.classList.toggle('bg-slate-400', !checked);
+        thumb.style.transitionDuration = `${STATE.duration / timeScale}ms`;
+        thumb.style.transform = checked ? 'translateX(48px) scaleX(1.12)' : 'translateX(0px) scaleX(1)';
+        setTimeout(() => {
+          if (thumb) thumb.style.transform = checked ? 'translateX(48px) scaleX(1)' : 'translateX(0px) scaleX(1)';
+        }, (STATE.duration * 0.5) / timeScale);
+        playTone(checked ? 900 : 600, 0.05);
       }
+
+      track.onclick = toggle;
+      activeScrubHandler = (p) => {
+        thumb.style.transition = 'none';
+        thumb.style.transform = `translateX(${p * 48}px) scaleX(${1 + Math.sin(p * Math.PI) * 0.25})`;
+      };
+      return toggle;
     }
 
-    function getExportJellyToggle() {
-      return `/* Jelly Spring Toggle Switch */
-.toggle-thumb {
-  transition: transform 450ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    function getExportJellyToggle(fmt, s) {
+      return `.toggle-thumb {
+  transition: transform ${s.duration}ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.peer:checked ~ .toggle-bg .toggle-thumb {
-  transform: translateX(3rem) scaleX(1.15); /* 늘어났다가 착지 */
+.toggle-active .toggle-thumb {
+  transform: translateX(48px);
 }`;
     }
 
-    // -----------------------------------------------------------
-    // 1-4. BORDER TRACE FORM FOCUS
-    // -----------------------------------------------------------
+    // 1-4. BORDER TRACE FORM FOCUS (Responsive SVG)
     function renderBorderTrace(container) {
       container.innerHTML = `
-        <div class="relative w-72 h-14 bg-dark-950 rounded-xl overflow-hidden flex items-center px-4">
-          <svg class="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-            <rect id="borderTraceRect" x="2" y="2" width="284" height="52" rx="10" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="80 600" stroke-dashoffset="0" style="transition: stroke-dashoffset 1.5s ease-in-out;" />
-          </svg>
-          <input type="text" placeholder="포커스하면 테두리 빛이 회전합니다" class="w-full bg-transparent text-xs text-white focus:outline-none placeholder-slate-500 z-10" onfocus="triggerBorderTrace()" />
+        <div class="flex flex-col items-center gap-3 w-full max-w-sm">
+          <div class="relative w-full h-14 bg-dark-950 rounded-xl overflow-hidden flex items-center px-4">
+            <svg class="absolute inset-0 w-full h-full pointer-events-none">
+              <rect class="trace-rect" x="1.5" y="1.5" width="99%" height="94%" rx="11" fill="none" stroke="#6366f1" stroke-width="2.5" pathLength="100" stroke-dasharray="25 75" stroke-dashoffset="0" />
+            </svg>
+            <input type="text" placeholder="여기를 터치하거나 동작 트리거 클릭" class="w-full bg-transparent text-xs text-white focus:outline-none placeholder-slate-400 z-10" />
+          </div>
         </div>
       `;
-    }
+      const rect = container.querySelector('.trace-rect');
+      const input = container.querySelector('input');
+      let anim = null;
 
-    function triggerBorderTrace() {
-      const rect = document.getElementById('borderTraceRect');
-      if (rect) {
-        rect.style.strokeDashoffset = '-680';
-        setTimeout(() => { rect.style.strokeDashoffset = '0'; }, 1500);
+      function trigger() {
+        if (anim) anim.cancel();
+        anim = rect.animate([
+          { strokeDashoffset: 100 },
+          { strokeDashoffset: 0 }
+        ], {
+          duration: STATE.duration / timeScale,
+          iterations: 2,
+          easing: 'linear'
+        });
       }
+
+      input.addEventListener('focus', trigger);
+      activeScrubHandler = (p) => {
+        rect.style.strokeDashoffset = `${100 - p * 100}`;
+      };
+      trigger();
+      return trigger;
     }
 
     function getExportBorderTrace() {
-      return `/* SVG Path Dashoffset Border Animation */
-@keyframes traceBorder {
-  0% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: -680; }
-}
-.active-border rect {
-  stroke-dasharray: 80 600;
-  animation: traceBorder 1.5s infinite linear;
+      return `<rect pathLength="100" stroke-dasharray="25 75" stroke-dashoffset="100" />
+/* CSS */
+@keyframes borderTrace {
+  to { stroke-dashoffset: 0; }
 }`;
     }
 
-    // -----------------------------------------------------------
-    // 2-1. FLIP GRID FILTER REORDER (부드러운 미끄러짐 재정렬)
-    // -----------------------------------------------------------
-    let flipItems = [1, 2, 3, 4, 5, 6];
-
+    // 2-1. FLIP GRID REORDER
     function renderFlipGrid(container) {
+      let items = [1, 2, 3, 4, 5, 6];
       container.innerHTML = `
-        <div class="w-full max-w-md space-y-4">
-          <div class="flex justify-between items-center text-xs">
-            <span class="text-slate-400">FLIP (First-Last-Invert-Play) 알고리즘</span>
-            <button onclick="triggerFlipGrid()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold flex items-center gap-1.5 transition">
-              <i data-lucide="shuffle" class="w-3.5 h-3.5"></i> 무작위 셔플 재정렬
-            </button>
-          </div>
-          <div id="flipGridBox" class="grid grid-cols-3 gap-3">
-            ${flipItems.map(num => `
-              <div data-flip-id="${num}" class="flip-card h-20 rounded-xl bg-gradient-to-tr from-dark-850 to-dark-800 border border-white/10 p-3 flex flex-col justify-between shadow-lg select-none">
-                <span class="text-xs font-mono font-bold text-indigo-400">#0${num}</span>
-                <span class="text-xs text-white font-bold">Item ${num}</span>
+        <div class="w-full max-w-md space-y-3">
+          <div class="grid grid-cols-3 gap-2.5 flip-box">
+            ${items.map(n => `
+              <div data-id="${n}" class="flip-item h-16 sm:h-20 rounded-xl bg-gradient-to-tr from-dark-850 to-dark-800 border border-white/10 p-3 flex flex-col justify-between shadow-lg cursor-pointer">
+                <span class="text-[11px] font-mono font-bold text-indigo-400">#0${n}</span>
+                <span class="text-xs text-white font-bold">Card ${n}</span>
               </div>
             `).join('')}
           </div>
         </div>
       `;
-    }
+      const box = container.querySelector('.flip-box');
 
-    function triggerFlipGrid() {
-      const container = document.getElementById('flipGridBox');
-      if (!container) return;
+      function shuffleFlip() {
+        const els = Array.from(box.querySelectorAll('.flip-item'));
+        const firstRects = new Map();
+        els.forEach(el => firstRects.set(el.dataset.id, el.getBoundingClientRect()));
 
-      const cards = Array.from(container.querySelectorAll('.flip-card'));
-      // FIRST: Record initial bounding rects
-      const firstRects = new Map();
-      cards.forEach(card => {
-        firstRects.set(card.getAttribute('data-flip-id'), card.getBoundingClientRect());
-      });
+        items.sort(() => Math.random() - 0.5);
+        items.forEach(id => box.appendChild(box.querySelector(`[data-id="${id}"]`)));
 
-      // Shuffling DOM
-      flipItems.sort(() => Math.random() - 0.5);
-      flipItems.forEach(id => {
-        const el = container.querySelector(`[data-flip-id="${id}"]`);
-        container.appendChild(el);
-      });
+        els.forEach(el => {
+          const first = firstRects.get(el.dataset.id);
+          const last = el.getBoundingClientRect();
+          const dx = first.left - last.left;
+          const dy = first.top - last.top;
 
-      // LAST: Record new rects, INVERT & PLAY
-      cards.forEach(card => {
-        const id = card.getAttribute('data-flip-id');
-        const first = firstRects.get(id);
-        const last = card.getBoundingClientRect();
-
-        const dx = first.left - last.left;
-        const dy = first.top - last.top;
-
-        // Invert
-        card.style.transform = `translate(${dx}px, ${dy}px)`;
-        card.style.transition = 'none';
-
-        // Play
-        requestAnimationFrame(() => {
-          card.style.transition = `transform ${STATE.duration / timeScale}ms cubic-bezier(${STATE.p1.x}, ${STATE.p1.y}, ${STATE.p2.x}, ${STATE.p2.y})`;
-          card.style.transform = 'translate(0, 0)';
+          el.animate([
+            { transform: `translate(${dx}px, ${dy}px)` },
+            { transform: 'translate(0, 0)' }
+          ], {
+            duration: STATE.duration / timeScale,
+            easing: getBezierCSS()
+          });
         });
-      });
-      playTone(700, 0.05);
+      }
+
+      box.onclick = shuffleFlip;
+      return shuffleFlip;
     }
 
-    function getExportFlipGrid() {
-      return `// FLIP Animation Standard Implementation
-const first = el.getBoundingClientRect();
-// ... DOM 순서 재배치 ...
+    function getExportFlipGrid(fmt, s) {
+      return `const first = el.getBoundingClientRect();
+container.appendChild(el); // DOM 재배치
 const last = el.getBoundingClientRect();
-const dx = first.left - last.left;
-const dy = first.top - last.top;
-
 el.animate([
-  { transform: \`translate(\${dx}px, \${dy}px)\` },
+  { transform: \`translate(\${first.left - last.left}px, \${first.top - last.top}px)\` },
   { transform: 'translate(0, 0)' }
-], {
-  duration: 600,
-  easing: 'cubic-bezier(0.16, 1, 0.3, 1)'
-});`;
+], { duration: ${s.duration}, easing: '${getBezierCSS()}' });`;
     }
 
-    // -----------------------------------------------------------
     // 2-2. CARD TO MODAL EXPANSION
-    // -----------------------------------------------------------
     function renderCardExpand(container) {
       container.innerHTML = `
-        <div class="relative w-full h-64 flex items-center justify-center">
-          <div id="expandableCard" onclick="triggerCardExpand()" class="w-48 h-32 rounded-2xl bg-gradient-to-tr from-accent-600 via-indigo-600 to-purple-600 p-4 shadow-2xl flex flex-col justify-between cursor-pointer transition-all duration-500 ease-out">
-            <div class="flex justify-between items-start text-white">
-              <i data-lucide="layers" class="w-5 h-5"></i>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/20">Click Me</span>
+        <div class="w-full h-56 flex items-center justify-center relative">
+          <div class="exp-card w-48 h-32 rounded-2xl bg-gradient-to-tr from-accent-600 via-indigo-600 to-purple-600 p-4 shadow-2xl flex flex-col justify-between cursor-pointer transition-all">
+            <div class="flex justify-between items-center text-white">
+              <i data-lucide="maximize-2" class="w-4 h-4"></i>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/20">Touch / Click</span>
             </div>
             <div>
-              <h4 class="text-xs font-bold text-white">확장형 모달 카드</h4>
-              <p class="text-[10px] text-white/70 mt-0.5">클릭하면 전면으로 확장</p>
+              <h4 class="text-xs font-bold text-white">공유 엘리먼트 카드</h4>
+              <p class="text-[11px] text-white/80 mt-0.5">누르면 모달로 확장됩니다</p>
             </div>
           </div>
         </div>
       `;
-    }
+      const card = container.querySelector('.exp-card');
+      let expanded = false;
 
-    let isCardExpanded = false;
-    function triggerCardExpand() {
-      const card = document.getElementById('expandableCard');
-      if (!card) return;
-      isCardExpanded = !isCardExpanded;
-      if (isCardExpanded) {
-        card.className = 'w-80 h-52 rounded-2xl bg-gradient-to-tr from-accent-600 via-indigo-600 to-purple-600 p-6 shadow-2xl flex flex-col justify-between cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] scale-105';
-      } else {
-        card.className = 'w-48 h-32 rounded-2xl bg-gradient-to-tr from-accent-600 via-indigo-600 to-purple-600 p-4 shadow-2xl flex flex-col justify-between cursor-pointer transition-all duration-500 ease-out';
+      function toggle() {
+        expanded = !expanded;
+        card.style.transitionDuration = `${STATE.duration / timeScale}ms`;
+        card.style.transitionTimingFunction = getBezierCSS();
+        if (expanded) {
+          card.className = 'exp-card w-full max-w-md h-52 rounded-2xl bg-gradient-to-tr from-accent-600 via-indigo-600 to-purple-600 p-6 shadow-2xl flex flex-col justify-between cursor-pointer transition-all';
+        } else {
+          card.className = 'exp-card w-48 h-32 rounded-2xl bg-gradient-to-tr from-accent-600 via-indigo-600 to-purple-600 p-4 shadow-2xl flex flex-col justify-between cursor-pointer transition-all';
+        }
       }
-      playTone(isCardExpanded ? 900 : 650, 0.05);
+      card.onclick = toggle;
+      return toggle;
     }
 
-    function getExportCardExpand() {
-      return `/* Shared Element Modal Expansion */
-.card {
-  transition: all 500ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-.card.expanded {
-  width: 100vw;
-  height: 100vh;
-  position: fixed;
-  inset: 0;
-  border-radius: 0;
+    function getExportCardExpand(fmt, s) {
+      return `.card-modal {
+  transition: all ${s.duration}ms ${getBezierCSS()};
 }`;
     }
 
-    // -----------------------------------------------------------
     // 2-3. AUTO-HEIGHT ACCORDION
-    // -----------------------------------------------------------
     function renderAutoAccordion(container) {
       container.innerHTML = `
         <div class="w-full max-w-sm panel-glass rounded-xl overflow-hidden border border-white/10">
-          <button onclick="triggerAutoAccordion()" class="w-full p-4 flex justify-between items-center text-xs font-bold text-white hover:bg-white/5 transition">
-            <span>가변 높이 Auto-Height 아코디언</span>
-            <i data-lucide="chevron-down" id="accIcon" class="w-4 h-4 transition-transform duration-300"></i>
+          <button class="acc-btn w-full p-4 flex justify-between items-center text-xs font-bold text-white hover:bg-white/5 transition">
+            <span>CSS Grid 0fr &rarr; 1fr 가변 아코디언</span>
+            <i data-lucide="chevron-down" class="acc-icon w-4 h-4 transition-transform duration-300"></i>
           </button>
-          <div id="accBody" class="grid grid-rows-[0fr] transition-all duration-300 ease-out">
+          <div class="acc-body grid grid-rows-[0fr] transition-all">
             <div class="overflow-hidden">
               <div class="p-4 pt-0 text-xs text-slate-300 leading-relaxed border-t border-white/5">
-                순수 CSS의 grid-template-rows 0fr &rarr; 1fr 트랜지션을 이용해 JavaScript 높이 계산 없이도 가변 콘텐츠 높이만큼 유기적으로 열리는 모던 테크닉입니다.
+                고정된 height 픽셀값 없이도 내부 텍스트 양에 맞춰 부드럽게 높이가 애니메이션됩니다. 모바일 화면에서도 레이아웃이 깨지지 않습니다.
               </div>
             </div>
           </div>
         </div>
       `;
+      const btn = container.querySelector('.acc-btn');
+      const body = container.querySelector('.acc-body');
+      const icon = container.querySelector('.acc-icon');
+      let open = false;
+
+      function toggle() {
+        open = !open;
+        body.style.transitionDuration = `${STATE.duration / timeScale}ms`;
+        body.style.transitionTimingFunction = getBezierCSS();
+        body.className = `acc-body grid ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'} transition-all`;
+        icon.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+      }
+      btn.onclick = toggle;
+      return toggle;
     }
 
-    let isAccOpen = false;
-    function triggerAutoAccordion() {
-      isAccOpen = !isAccOpen;
-      const body = document.getElementById('accBody');
-      const icon = document.getElementById('accIcon');
-      if (body) {
-        body.className = isAccOpen ? 'grid grid-rows-[1fr] transition-all duration-300 ease-out' : 'grid grid-rows-[0fr] transition-all duration-300 ease-out';
-      }
-      if (icon) {
-        icon.style.transform = isAccOpen ? 'rotate(180deg)' : 'rotate(0deg)';
-      }
-      playTone(isAccOpen ? 800 : 600, 0.04);
-    }
-
-    function getExportAutoAccordion() {
-      return `/* Pure CSS Auto-Height Accordion */
-.accordion-wrapper {
+    function getExportAutoAccordion(fmt, s) {
+      return `.accordion-body {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 300ms ease-out;
+  transition: grid-template-rows ${s.duration}ms ${getBezierCSS()};
 }
-.accordion-wrapper.open {
+.accordion-body.open {
   grid-template-rows: 1fr;
-}
-.accordion-inner {
-  overflow: hidden;
 }`;
     }
 
-    // -----------------------------------------------------------
-    // 3-1. SCROLL SCRUBBER & LAG
-    // -----------------------------------------------------------
+    // 3-1. SCROLL SCRUBBER
     function renderScrollScrubber(container) {
       container.innerHTML = `
-        <div class="flex flex-col items-center justify-center space-y-4">
-          <div data-scrubbable class="w-24 h-24 rounded-2xl bg-gradient-to-tr from-accent-cyan via-indigo-500 to-accent-pink shadow-2xl flex items-center justify-center font-bold text-white text-xs select-none">
-            Scrub Me
+        <div class="flex flex-col items-center justify-center space-y-4 w-full max-w-xs">
+          <div class="scrub-cube w-24 h-24 rounded-2xl bg-gradient-to-tr from-accent-cyan via-indigo-500 to-accent-pink shadow-2xl flex items-center justify-center font-bold text-white text-xs">
+            Scrub 3D
           </div>
-          <span class="text-xs text-slate-400">하단 타임라인 스크러버 바를 좌우로 드래그해보세요</span>
+          <input type="range" min="0" max="1000" value="0" class="local-scrub w-full h-2 bg-dark-800 rounded-lg cursor-pointer" />
+          <span class="text-xs text-slate-400 text-center">슬라이더나 하단 타임라인 바를 드래그하세요</span>
         </div>
       `;
+      const cube = container.querySelector('.scrub-cube');
+      const slider = container.querySelector('.local-scrub');
+
+      function applyScrub(p) {
+        cube.style.transform = `perspective(600px) rotateY(${p * 360}deg) rotateX(${p * 180}deg) scale(${0.85 + p * 0.35})`;
+        slider.value = Math.round(p * 1000);
+      }
+
+      slider.oninput = (e) => {
+        onTimelineScrub(e.target.value);
+      };
+      activeScrubHandler = applyScrub;
+
+      function trigger() {
+        let start = null;
+        const dur = STATE.duration / timeScale;
+        function step(now) {
+          if (!start) start = now;
+          const p = Math.min((now - start) / dur, 1);
+          applyScrub(evaluateCubicBezier(p));
+          updateScrubberUIOnly(p);
+          if (p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
+      return trigger;
     }
-    function triggerScrollScrubber() { onTimelineScrub(500); }
+
     function getExportScrollScrubber() {
-      return `/* Web Animations API Scroll Timeline */
-const cube = document.querySelector('.cube');
-cube.animate({
-  transform: ['rotate(0deg) scale(0.8)', 'rotate(360deg) scale(1.2)']
-}, {
-  timeline: new ScrollTimeline({
-    source: document.documentElement,
-    axis: 'y'
-  })
+      return `window.addEventListener('scroll', () => {
+  const progress = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+  cube.style.transform = \`rotate(\${progress * 360}deg)\`;
 });`;
     }
 
-    // -----------------------------------------------------------
-    // 3-2. PARALLAX DEPTH LAYERS
-    // -----------------------------------------------------------
+    // 3-2. PARALLAX DEPTH LAYERS (Pointer + Touch enabled)
     function renderParallaxDepth(container) {
       container.innerHTML = `
-        <div id="parallaxStage" class="relative w-80 h-52 rounded-xl bg-dark-950 border border-white/10 overflow-hidden flex items-center justify-center">
-          <div id="paraBack" class="absolute inset-0 bg-gradient-to-br from-indigo-900/40 to-transparent transition-transform duration-100 ease-out"></div>
-          <div id="paraMid" class="absolute w-40 h-40 rounded-full bg-accent-500/10 blur-xl transition-transform duration-150 ease-out"></div>
-          <div id="paraFront" class="relative z-10 px-6 py-4 rounded-xl panel-glass border border-white/20 text-center font-display font-bold text-white text-sm transition-transform duration-200 ease-out">
-            3D 패럴랙스 뎁스 레이어
+        <div class="para-stage touch-none-drag relative w-full max-w-sm h-52 rounded-2xl bg-dark-950 border border-white/10 overflow-hidden flex items-center justify-center cursor-move">
+          <div class="para-back absolute inset-4 rounded-xl bg-gradient-to-br from-indigo-900/40 to-cyan-900/20 border border-white/5 transition-transform duration-100 ease-out"></div>
+          <div class="para-mid absolute w-36 h-36 rounded-full bg-accent-500/20 blur-xl transition-transform duration-150 ease-out"></div>
+          <div class="para-front relative z-10 px-5 py-3.5 rounded-xl panel-glass border border-white/20 text-center font-display font-bold text-white text-xs shadow-2xl transition-transform duration-150 ease-out">
+            터치/마우스 드래그 3D 시차
           </div>
         </div>
       `;
-      const stage = container.querySelector('#parallaxStage');
-      if (stage) {
-        stage.addEventListener('mousemove', (e) => {
-          const rect = stage.getBoundingClientRect();
-          const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
-          const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
-          stage.querySelector('#paraBack').style.transform = `translate(${x * -6}px, ${y * -6}px)`;
-          stage.querySelector('#paraMid').style.transform = `translate(${x * 12}px, ${y * 12}px)`;
-          stage.querySelector('#paraFront').style.transform = `translate(${x * 20}px, ${y * 20}px) scale(1.05)`;
-        });
-        stage.addEventListener('mouseleave', () => {
-          stage.querySelector('#paraBack').style.transform = 'translate(0,0)';
-          stage.querySelector('#paraMid').style.transform = 'translate(0,0)';
-          stage.querySelector('#paraFront').style.transform = 'translate(0,0) scale(1)';
-        });
-      }
-    }
-    function triggerParallaxDepth() {}
-    function getExportParallaxDepth() {
-      return `/* CSS Perspective Multi-Layer Parallax */
-.parallax-container {
-  perspective: 1000px;
-}
-.layer-bg { transform: translateZ(-100px) scale(2); }
-.layer-mid { transform: translateZ(-50px) scale(1.5); }
-.layer-front { transform: translateZ(0); }`;
+      const stage = container.querySelector('.para-stage');
+      const back = container.querySelector('.para-back');
+      const mid = container.querySelector('.para-mid');
+      const front = container.querySelector('.para-front');
+
+      stage.addEventListener('pointermove', (e) => {
+        const rect = stage.getBoundingClientRect();
+        const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+        const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+        back.style.transform = `translate(${x * -10}px, ${y * -10}px)`;
+        mid.style.transform = `translate(${x * 18}px, ${y * 18}px)`;
+        front.style.transform = `translate(${x * 28}px, ${y * 28}px) scale(1.06)`;
+      });
+
+      stage.addEventListener('pointerleave', () => {
+        back.style.transform = 'translate(0,0)';
+        mid.style.transform = 'translate(0,0)';
+        front.style.transform = 'translate(0,0) scale(1)';
+      });
+
+      return () => {
+        front.animate([
+          { transform: 'translate(-20px, -12px) scale(1.06)' },
+          { transform: 'translate(20px, 12px) scale(1.06)' },
+          { transform: 'translate(0, 0) scale(1)' }
+        ], { duration: STATE.duration / timeScale, easing: getBezierCSS() });
+      };
     }
 
-    // -----------------------------------------------------------
-    // 4-1. SPRING TOSS & BOUNDS
-    // -----------------------------------------------------------
+    function getExportParallaxDepth() {
+      return `stage.addEventListener('pointermove', (e) => {
+  const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+  const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+  frontLayer.style.transform = \`translate(\${x * 28}px, \${y * 28}px)\`;
+});`;
+    }
+
+    // 4-1. SPRING TOSS & BOUNDS (Unified Pointer/Touch Gesture + No Window Listener Leak)
     function renderSpringToss(container) {
       container.innerHTML = `
-        <div id="tossArena" class="relative w-80 h-56 rounded-2xl bg-dark-950 border border-white/10 overflow-hidden flex items-center justify-center">
-          <div id="tossBox" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-accent-cyan to-indigo-600 shadow-xl flex items-center justify-center font-bold text-white text-[11px] cursor-grab active:cursor-grabbing select-none absolute">
-            던지기!
+        <div class="toss-arena touch-none-drag relative w-full max-w-sm h-56 rounded-2xl bg-dark-950 border border-white/10 overflow-hidden flex items-center justify-center">
+          <div class="toss-box w-16 h-16 rounded-2xl bg-gradient-to-tr from-accent-cyan to-indigo-600 shadow-xl flex items-center justify-center font-bold text-white text-xs cursor-grab active:cursor-grabbing select-none absolute">
+            잡고 던지기
           </div>
         </div>
       `;
-      setupSpringTossPhysics(container.querySelector('#tossArena'), container.querySelector('#tossBox'));
-    }
+      const arena = container.querySelector('.toss-arena');
+      const box = container.querySelector('.toss-box');
 
-    function setupSpringTossPhysics(arena, box) {
       let isDragging = false;
-      let startX, startY;
-      let lastX, lastY;
-      let vx = 0, vy = 0;
-      let posX = 0, posY = 0;
-      let tossAnimId = null;
+      let startX = 0, startY = 0, lastX = 0, lastY = 0;
+      let vx = 0, vy = 0, posX = 0, posY = 0;
+      let tossRaf = null;
 
-      box.addEventListener('mousedown', (e) => {
+      function simulatePhysics() {
+        cancelAnimationFrame(tossRaf);
+        function step() {
+          posX += vx * timeScale;
+          posY += vy * timeScale;
+          vx *= 0.95;
+          vy *= 0.95;
+
+          const maxX = (arena.clientWidth / 2) - 36;
+          const maxY = (arena.clientHeight / 2) - 36;
+
+          if (posX > maxX || posX < -maxX) {
+            vx *= -0.78;
+            posX = Math.max(-maxX, Math.min(maxX, posX));
+            playTone(780, 0.02);
+          }
+          if (posY > maxY || posY < -maxY) {
+            vy *= -0.78;
+            posY = Math.max(-maxY, Math.min(maxY, posY));
+            playTone(780, 0.02);
+          }
+
+          box.style.transform = `translate(${posX}px, ${posY}px)`;
+          if (Math.hypot(vx, vy) > 0.15) {
+            tossRaf = requestAnimationFrame(step);
+          }
+        }
+        tossRaf = requestAnimationFrame(step);
+      }
+
+      box.addEventListener('pointerdown', (e) => {
         isDragging = true;
-        cancelAnimationFrame(tossAnimId);
+        cancelAnimationFrame(tossRaf);
         startX = e.clientX - posX;
         startY = e.clientY - posY;
         lastX = e.clientX;
         lastY = e.clientY;
+        box.setPointerCapture(e.pointerId);
       });
 
-      window.addEventListener('mousemove', (e) => {
+      box.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
         posX = e.clientX - startX;
         posY = e.clientY - startY;
-        vx = e.clientX - lastX;
-        vy = e.clientY - lastY;
+        vx = (e.clientX - lastX) * 0.8;
+        vy = (e.clientY - lastY) * 0.8;
         lastX = e.clientX;
         lastY = e.clientY;
         box.style.transform = `translate(${posX}px, ${posY}px)`;
       });
 
-      window.addEventListener('mouseup', () => {
+      box.addEventListener('pointerup', (e) => {
         if (!isDragging) return;
         isDragging = false;
-
-        function simulate() {
-          posX += vx;
-          posY += vy;
-          vx *= 0.94; // friction
-          vy *= 0.94;
-
-          // Wall bounds bounce
-          const maxX = 110, maxY = 80;
-          if (posX > maxX || posX < -maxX) {
-            vx *= -0.7; // restitution bounce
-            posX = Math.max(-maxX, Math.min(maxX, posX));
-            playTone(800, 0.02);
-          }
-          if (posY > maxY || posY < -maxY) {
-            vy *= -0.7;
-            posY = Math.max(-maxY, Math.min(maxY, posY));
-            playTone(800, 0.02);
-          }
-
-          box.style.transform = `translate(${posX}px, ${posY}px)`;
-
-          if (Math.hypot(vx, vy) > 0.1) {
-            tossAnimId = requestAnimationFrame(simulate);
-          }
-        }
-        simulate();
+        box.releasePointerCapture(e.pointerId);
+        simulatePhysics();
       });
-    }
 
-    function triggerSpringToss() {
-      const box = document.getElementById('tossBox');
-      if (box) box.style.transform = 'translate(0px, 0px)';
+      registerCleanup(() => cancelAnimationFrame(tossRaf));
+
+      return () => {
+        vx = (Math.random() > 0.5 ? 1 : -1) * 14;
+        vy = -12;
+        simulatePhysics();
+      };
     }
 
     function getExportSpringToss() {
-      return `// Physics Toss & Velocity Simulation
-let vx = 15, vy = -10;
-const friction = 0.95;
-const bounce = -0.75;
-
-function step() {
-  posX += vx; posY += vy;
-  vx *= friction; vy *= friction;
-  if (posX > maxX || posX < 0) vx *= bounce;
-  el.style.transform = \`translate(\${posX}px, \${posY}px)\`;
-  if (Math.hypot(vx, vy) > 0.1) requestAnimationFrame(step);
-}`;
+      return `box.addEventListener('pointerdown', e => box.setPointerCapture(e.pointerId));
+box.addEventListener('pointerup', () => {
+  function loop() {
+    posX += vx; posY += vy;
+    vx *= 0.95; vy *= 0.95;
+    if (Math.abs(posX) > boundX) vx *= -0.78;
+    box.style.transform = \`translate(\${posX}px, \${posY}px)\`;
+    if (Math.hypot(vx, vy) > 0.15) requestAnimationFrame(loop);
+  }
+  loop();
+});`;
     }
 
-    // -----------------------------------------------------------
-    // 4-2. MAGNETIC ORB & 4-3. TILT SPECULAR
-    // -----------------------------------------------------------
+    // 4-2. MAGNETIC ORB (Touch + Mouse)
     function renderMagneticOrb(container) {
       container.innerHTML = `
-        <div class="flex flex-col items-center justify-center">
-          <button id="magneticTargetBtn" class="px-8 py-4 rounded-full bg-gradient-to-r from-accent-600 to-indigo-500 text-white font-semibold text-xs shadow-xl shadow-accent-600/30 transition-transform duration-100 ease-out select-none flex items-center gap-2">
-            <span>자석 커서 버튼</span>
+        <div class="mag-zone touch-none-drag w-64 h-44 flex flex-col items-center justify-center">
+          <button class="mag-btn px-7 py-4 rounded-full bg-gradient-to-r from-accent-600 to-indigo-500 text-white font-semibold text-xs shadow-xl shadow-accent-600/30 transition-transform duration-150 ease-out flex items-center gap-2">
+            <span>마그네틱 자석 버튼</span>
             <i data-lucide="magnet" class="w-4 h-4"></i>
           </button>
-          <span class="text-xs text-slate-500 mt-4">버튼 근처로 마우스를 가져가보세요</span>
+          <span class="text-xs text-slate-400 mt-4">주변을 터치하거나 마우스를 움직여보세요</span>
         </div>
       `;
-      const btn = container.querySelector('#magneticTargetBtn');
-      if (btn) {
-        btn.addEventListener('mousemove', (e) => {
-          const rect = btn.getBoundingClientRect();
-          const x = (e.clientX - rect.left - rect.width / 2) * 0.35;
-          const y = (e.clientY - rect.top - rect.height / 2) * 0.35;
-          btn.style.transform = `translate(${x}px, ${y}px)`;
-        });
-        btn.addEventListener('mouseleave', () => {
-          btn.style.transform = 'translate(0px, 0px)';
-        });
-      }
+      const zone = container.querySelector('.mag-zone');
+      const btn = container.querySelector('.mag-btn');
+
+      zone.addEventListener('pointermove', (e) => {
+        const rect = btn.getBoundingClientRect();
+        const x = (e.clientX - (rect.left + rect.width / 2)) * 0.4;
+        const y = (e.clientY - (rect.top + rect.height / 2)) * 0.4;
+        btn.style.transform = `translate(${x}px, ${y}px)`;
+      });
+      zone.addEventListener('pointerleave', () => {
+        btn.style.transform = 'translate(0px, 0px)';
+      });
+
+      return () => {
+        btn.animate([
+          { transform: 'translate(0, 0)' },
+          { transform: 'translate(18px, -14px) scale(1.06)' },
+          { transform: 'translate(-12px, 10px)' },
+          { transform: 'translate(0, 0)' }
+        ], { duration: STATE.duration / timeScale, easing: getBezierCSS() });
+      };
     }
-    function triggerMagneticOrb() {}
+
     function getExportMagneticOrb() {
-      return `/* Magnetic Button JavaScript Hook */
-btn.addEventListener('mousemove', (e) => {
+      return `btn.addEventListener('pointermove', (e) => {
   const rect = btn.getBoundingClientRect();
-  const x = (e.clientX - rect.left - rect.width / 2) * 0.35;
-  const y = (e.clientY - rect.top - rect.height / 2) * 0.35;
+  const x = (e.clientX - (rect.left + rect.width / 2)) * 0.4;
+  const y = (e.clientY - (rect.top + rect.height / 2)) * 0.4;
   btn.style.transform = \`translate(\${x}px, \${y}px)\`;
 });`;
     }
 
+    // 4-3. 3D TILT SPECULAR (Touch + Mouse)
     function renderTiltSpecular(container) {
       container.innerHTML = `
-        <div id="tiltCardSpec" class="w-64 h-40 rounded-2xl bg-gradient-to-tr from-dark-850 via-dark-800 to-dark-700 border border-white/20 p-5 shadow-2xl relative overflow-hidden transition-transform duration-150 ease-out cursor-pointer flex flex-col justify-between">
-          <div id="tiltLight" class="absolute -inset-full bg-gradient-to-tr from-white/0 via-white/10 to-transparent pointer-events-none transition-transform duration-75"></div>
+        <div class="tilt-card touch-none-drag w-64 h-40 rounded-2xl bg-gradient-to-tr from-dark-850 via-dark-800 to-indigo-950/60 border border-white/20 p-5 shadow-2xl relative overflow-hidden transition-transform duration-150 ease-out cursor-pointer flex flex-col justify-between">
+          <div class="tilt-light absolute -inset-full bg-gradient-to-tr from-white/0 via-white/15 to-transparent pointer-events-none"></div>
           <div class="flex justify-between items-start text-white">
-            <i data-lucide="sparkles" class="w-6 h-6 text-accent-cyan"></i>
-            <span class="text-[10px] font-mono text-slate-400">SPECULAR 3D</span>
+            <i data-lucide="sparkles" class="w-5 h-5 text-accent-cyan"></i>
+            <span class="text-[10px] font-mono text-indigo-300">TOUCH 3D TILT</span>
           </div>
           <div>
-            <div class="text-xs font-mono font-bold text-white tracking-widest">**** 7729</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">홀로그램 표면 반사광 시뮬레이션</div>
+            <div class="text-xs font-mono font-bold text-white tracking-widest">MOTION LAB PRO</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">표면을 문질러 각도를 조절하세요</div>
           </div>
         </div>
       `;
-      const card = container.querySelector('#tiltCardSpec');
-      const light = container.querySelector('#tiltLight');
-      if (card) {
-        card.addEventListener('mousemove', (e) => {
-          const rect = card.getBoundingClientRect();
-          const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
-          const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
-          card.style.transform = `perspective(800px) rotateX(${y * -18}deg) rotateY(${x * 18}deg) scale(1.05)`;
-          light.style.transform = `translate(${x * 50}px, ${y * 50}px)`;
-        });
-        card.addEventListener('mouseleave', () => {
-          card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) scale(1)';
-        });
-      }
+      const card = container.querySelector('.tilt-card');
+      const light = container.querySelector('.tilt-light');
+
+      card.addEventListener('pointermove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+        const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+        card.style.transform = `perspective(800px) rotateX(${y * -20}deg) rotateY(${x * 20}deg) scale(1.04)`;
+        light.style.transform = `translate(${x * 55}px, ${y * 55}px)`;
+      });
+      card.addEventListener('pointerleave', () => {
+        card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) scale(1)';
+      });
+
+      return () => {
+        card.animate([
+          { transform: 'perspective(800px) rotateX(0deg) rotateY(0deg)' },
+          { transform: 'perspective(800px) rotateX(15deg) rotateY(-18deg) scale(1.05)' },
+          { transform: 'perspective(800px) rotateX(-12deg) rotateY(18deg) scale(1.05)' },
+          { transform: 'perspective(800px) rotateX(0deg) rotateY(0deg)' }
+        ], { duration: STATE.duration / timeScale, easing: getBezierCSS() });
+      };
     }
-    function triggerTiltSpecular() {}
+
     function getExportTiltSpecular() {
-      return `/* 3D Perspective Tilt Card with Light Reflex */
-card.addEventListener('mousemove', (e) => {
-  const rect = card.getBoundingClientRect();
+      return `card.addEventListener('pointermove', (e) => {
   const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
   const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
-  card.style.transform = \`perspective(800px) rotateX(\${y * -15}deg) rotateY(\${x * 15}deg)\`;
+  card.style.transform = \`perspective(800px) rotateX(\${y * -20}deg) rotateY(\${x * 20}deg)\`;
 });`;
     }
 
-    // -----------------------------------------------------------
-    // 5-1. SVG LINE DRAWING & 5-2. HAMBURGER MORPH & 5-3. METABALL
-    // -----------------------------------------------------------
+    // 5-1. SVG LINE DRAWING
     function renderSvgLineDraw(container) {
       container.innerHTML = `
         <div class="flex flex-col items-center justify-center">
           <svg class="w-32 h-32 text-indigo-400" viewBox="0 0 100 100">
-            <path id="svgDrawingPath" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="300" stroke-dashoffset="300" d="M20 50 L40 70 L80 30 M50 10 A40 40 0 1 0 50 90 A40 40 0 1 0 50 10" style="transition: stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1);" />
+            <path class="draw-path" pathLength="100" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="100" stroke-dashoffset="100" d="M22 52 L42 72 L78 30 M50 10 A40 40 0 1 0 50 90 A40 40 0 1 0 50 10" />
           </svg>
-          <span class="text-xs text-slate-400 mt-4">stroke-dashoffset 라인 드로잉</span>
+          <span class="text-xs text-slate-400 mt-3">SVG pathLength="100" 드로잉</span>
         </div>
       `;
-      setTimeout(triggerSvgLineDraw, 100);
-    }
-    function triggerSvgLineDraw() {
-      const path = document.getElementById('svgDrawingPath');
-      if (path) {
-        path.style.strokeDashoffset = '300';
-        setTimeout(() => { path.style.strokeDashoffset = '0'; }, 50);
-        playTone(900, 0.05);
+      const path = container.querySelector('.draw-path');
+
+      function trigger() {
+        path.style.transition = 'none';
+        path.style.strokeDashoffset = '100';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            path.style.transition = `stroke-dashoffset ${STATE.duration / timeScale}ms ${getBezierCSS()}`;
+            path.style.strokeDashoffset = '0';
+          });
+        });
       }
+
+      activeScrubHandler = (p) => {
+        path.style.transition = 'none';
+        path.style.strokeDashoffset = `${100 - p * 100}`;
+      };
+
+      trigger();
+      return trigger;
     }
-    function getExportSvgLineDraw() {
-      return `/* SVG Path Stroke Dashoffset Drawing */
-@keyframes drawStroke {
-  to { stroke-dashoffset: 0; }
-}
-.draw-path {
-  stroke-dasharray: 300;
-  stroke-dashoffset: 300;
-  animation: drawStroke 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+    function getExportSvgLineDraw(fmt, s) {
+      return `<path pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" class="draw" />
+.draw {
+  transition: stroke-dashoffset ${s.duration}ms ${getBezierCSS()};
+  stroke-dashoffset: 0;
 }`;
     }
 
+    // 5-2. SVG HAMBURGER TO X
     function renderSvgHamburger(container) {
       container.innerHTML = `
         <div class="flex flex-col items-center justify-center">
-          <button id="hambBtn" onclick="triggerSvgHamburger()" class="w-16 h-16 rounded-2xl bg-dark-900 border border-white/10 flex flex-col items-center justify-center gap-1.5 shadow-xl hover:border-accent-500/50 transition">
-            <span id="hambTop" class="w-7 h-0.5 bg-white rounded-full transition-all duration-300"></span>
-            <span id="hambMid" class="w-7 h-0.5 bg-white rounded-full transition-all duration-300"></span>
-            <span id="hambBot" class="w-7 h-0.5 bg-white rounded-full transition-all duration-300"></span>
+          <button class="hamb-btn w-16 h-16 rounded-2xl bg-dark-900 border border-white/10 flex flex-col items-center justify-center gap-1.5 shadow-xl">
+            <span class="bar-top w-7 h-0.5 bg-white rounded-full transition-all"></span>
+            <span class="bar-mid w-7 h-0.5 bg-white rounded-full transition-all"></span>
+            <span class="bar-bot w-7 h-0.5 bg-white rounded-full transition-all"></span>
           </button>
-          <span class="text-xs text-slate-400 mt-4">클릭하여 햄버거 &harr; 'X' 전환</span>
+          <span class="text-xs text-slate-400 mt-3">터치하여 아이콘 패스 모핑</span>
         </div>
       `;
-    }
-    let isHambOpen = false;
-    function triggerSvgHamburger() {
-      isHambOpen = !isHambOpen;
-      const top = document.getElementById('hambTop');
-      const mid = document.getElementById('hambMid');
-      const bot = document.getElementById('hambBot');
-      if (top && mid && bot) {
-        top.style.transform = isHambOpen ? 'translateY(8px) rotate(45deg)' : 'none';
-        mid.style.opacity = isHambOpen ? '0' : '1';
-        bot.style.transform = isHambOpen ? 'translateY(-8px) rotate(-45deg)' : 'none';
+      const btn = container.querySelector('.hamb-btn');
+      const top = container.querySelector('.bar-top');
+      const mid = container.querySelector('.bar-mid');
+      const bot = container.querySelector('.bar-bot');
+      let open = false;
+
+      function toggle() {
+        open = !open;
+        const dur = `${STATE.duration / timeScale}ms`;
+        const ease = getBezierCSS();
+        [top, mid, bot].forEach(b => { b.style.transitionDuration = dur; b.style.transitionTimingFunction = ease; });
+        top.style.transform = open ? 'translateY(8px) rotate(45deg)' : 'none';
+        mid.style.opacity = open ? '0' : '1';
+        bot.style.transform = open ? 'translateY(-8px) rotate(-45deg)' : 'none';
       }
-      playTone(isHambOpen ? 950 : 650, 0.03);
-    }
-    function getExportSvgHamburger() {
-      return `/* Hamburger to X CSS Transform */
-.bar-top.active { transform: translateY(8px) rotate(45deg); }
-.bar-mid.active { opacity: 0; }
-.bar-bot.active { transform: translateY(-8px) rotate(-45deg); }`;
+      btn.onclick = toggle;
+      return toggle;
     }
 
+    function getExportSvgHamburger() {
+      return `.open .bar-top { transform: translateY(8px) rotate(45deg); }
+.open .bar-mid { opacity: 0; }
+.open .bar-bot { transform: translateY(-8px) rotate(-45deg); }`;
+    }
+
+    // 5-3. METABALL LIQUID (Fixed Interval Leak)
     function renderMetaballLiquid(container) {
       container.innerHTML = `
-        <div class="metaball-container relative w-64 h-36 bg-dark-950 rounded-xl flex items-center justify-center overflow-hidden border border-white/10">
-          <div class="w-12 h-12 rounded-full bg-accent-500 absolute"></div>
-          <div id="metaDrop" class="w-12 h-12 rounded-full bg-accent-cyan absolute transition-transform duration-1000 ease-in-out" style="transform: translateX(-40px);"></div>
+        <div class="metaball-container relative w-64 h-36 bg-dark-950 rounded-2xl flex items-center justify-center overflow-hidden border border-white/10 cursor-pointer">
+          <div class="w-14 h-14 rounded-full bg-accent-500 absolute"></div>
+          <div class="meta-drop w-12 h-12 rounded-full bg-accent-cyan absolute transition-transform duration-1000 ease-in-out" style="transform: translateX(-48px);"></div>
         </div>
       `;
-      setInterval(() => {
-        const drop = document.getElementById('metaDrop');
-        if (drop) {
-          const cur = drop.style.transform.includes('40px') ? '-40px' : '40px';
-          drop.style.transform = `translateX(${cur})`;
-        }
-      }, 1500);
-    }
-    function triggerMetaballLiquid() {}
-    function getExportMetaballLiquid() {
-      return `<!-- SVG Filter for Gooey / Metaball -->
-<filter id="metaball">
-  <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-  <feColorMatrix in="blur" mode="matrix" values="
-    1 0 0 0 0  
-    0 1 0 0 0  
-    0 0 1 0 0  
-    0 0 0 19 -9" />
-</filter>`;
+      const drop = container.querySelector('.meta-drop');
+      let dir = 1;
+
+      function step() {
+        dir *= -1;
+        drop.style.transitionDuration = `${STATE.duration / timeScale}ms`;
+        drop.style.transform = `translateX(${dir * 48}px)`;
+      }
+
+      const timer = setInterval(step, (STATE.duration + 200) / timeScale);
+      registerCleanup(() => clearInterval(timer));
+      container.firstElementChild.onclick = step;
+      return step;
     }
 
-    // -----------------------------------------------------------
-    // 6-1. SCRAMBLE TEXT & 6-2. VARIABLE FONT & 6-3. STAGGER SPLIT
-    // -----------------------------------------------------------
-    let scrambleTimer = null;
+    function getExportMetaballLiquid() {
+      return `/* SVG Gooey Filter */
+.metaball-stage { filter: url('#metaball-filter'); }`;
+    }
+
+    // 6-1. SCRAMBLE DECODER
     function renderScrambleDecoder(container) {
       container.innerHTML = `
-        <div class="flex flex-col items-center justify-center p-6 bg-dark-950/70 rounded-2xl border border-white/5">
-          <div id="scrambleTextEl" class="font-mono text-2xl sm:text-3xl font-bold text-accent-cyan tracking-wider select-none min-h-[44px]">
-            SYSTEM READY
+        <div class="flex flex-col items-center justify-center p-6 bg-dark-950/70 rounded-2xl border border-white/10">
+          <div class="scramble-txt font-mono text-xl sm:text-2xl font-bold text-accent-cyan tracking-wider text-center">
+            MOTION OS READY
           </div>
-          <button onclick="triggerScrambleDecoder()" class="mt-4 px-4 py-2 rounded-lg bg-accent-cyan/20 hover:bg-accent-cyan/30 text-cyan-300 border border-cyan-500/30 text-xs font-mono font-semibold transition">
-            디코딩 다시 실행
+          <button class="scramble-btn mt-4 px-4 py-1.5 rounded-lg bg-accent-cyan/20 text-cyan-300 border border-cyan-500/30 text-xs font-mono">
+            디코딩 재실행
           </button>
         </div>
       `;
-      triggerScrambleDecoder();
+      const el = container.querySelector('.scramble-txt');
+      const btn = container.querySelector('.scramble-btn');
+      let timer = null;
+
+      function trigger() {
+        clearInterval(timer);
+        const target = "INTERACTIVE WEB 2026";
+        const glyphs = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789@#$%&*";
+        let iter = 0;
+
+        timer = setInterval(() => {
+          el.innerText = target.split('').map((c, i) => {
+            if (c === ' ') return ' ';
+            if (i < iter) return target[i];
+            return glyphs[Math.floor(Math.random() * glyphs.length)];
+          }).join('');
+
+          if (iter >= target.length) clearInterval(timer);
+          iter += 0.4 * timeScale;
+        }, 30);
+      }
+
+      btn.onclick = trigger;
+      registerCleanup(() => clearInterval(timer));
+      trigger();
+      return trigger;
     }
-    function triggerScrambleDecoder() {
-      const el = document.getElementById('scrambleTextEl');
-      if (!el) return;
-      if (scrambleTimer) clearInterval(scrambleTimer);
 
-      const target = "FUTURE ONLINE 2026";
-      const glyphs = "ABCDEFGHJKLMNOPQRSTUVWXYZ0123456789$#%&*";
-      let iter = 0;
-
-      scrambleTimer = setInterval(() => {
-        el.innerText = target.split('').map((c, i) => {
-          if (c === ' ') return ' ';
-          if (i < iter) return target[i];
-          return glyphs[Math.floor(Math.random() * glyphs.length)];
-        }).join('');
-
-        if (iter >= target.length) {
-          clearInterval(scrambleTimer);
-          playTone(1100, 0.08, 'triangle');
-        } else {
-          playTone(750 + Math.random() * 200, 0.015);
-        }
-        iter += 1 / 3;
-      }, 30);
-    }
     function getExportScrambleDecoder() {
-      return `// Matrix Glyph Scramble Decoder
-const glyphs = "ABCDEFGHJKLMNOPQRSTUVWXYZ0123456789!@#$%";
-function decode(el, phrase) {
-  let iter = 0;
-  const timer = setInterval(() => {
-    el.innerText = phrase.split('').map((c, i) => {
-      if (i < iter) return phrase[i];
-      return glyphs[Math.floor(Math.random() * glyphs.length)];
-    }).join('');
-    if (iter >= phrase.length) clearInterval(timer);
-    iter += 1/3;
-  }, 30);
-}`;
+      return `const glyphs = "ABCDEF0123456789!@#$%";
+el.innerText = target.split('').map((c, i) =>
+  i < iter ? c : glyphs[Math.floor(Math.random() * glyphs.length)]
+).join('');`;
     }
 
+    // 6-2. VARIABLE FONT WAVE (Animated Wave + Slider)
     function renderVariableFontWave(container) {
+      const word = "KINETIC";
       container.innerHTML = `
         <div class="flex flex-col items-center justify-center space-y-4">
-          <div id="varFontText" class="text-3xl sm:text-5xl font-sans tracking-tight text-white select-none transition-all duration-75" style="font-weight: 300;">
-            KINETIC TYPE
+          <div class="var-word flex gap-1 text-3xl sm:text-5xl font-sans tracking-tight text-white">
+            ${word.split('').map(ch => `<span class="var-ch inline-block transition-transform duration-75">${ch}</span>`).join('')}
           </div>
-          <div class="w-64 space-y-1">
-            <div class="flex justify-between text-xs text-slate-400">
-              <span>Font Weight</span>
-              <span id="varWeightLabel" class="font-mono text-indigo-400">300</span>
-            </div>
-            <input type="range" min="100" max="900" step="20" value="300" oninput="document.getElementById('varFontText').style.fontWeight = this.value; document.getElementById('varWeightLabel').innerText = this.value;" class="w-full h-1.5 bg-dark-800 rounded" />
-          </div>
+          <span class="text-xs text-slate-400">실시간 사인파(Sine) 웨이트 & 스케일 물결</span>
         </div>
       `;
+      const chars = container.querySelectorAll('.var-ch');
+      let rafId = null;
+      let phase = 0;
+
+      function loop() {
+        phase += 0.08 * timeScale;
+        chars.forEach((span, idx) => {
+          const s = (Math.sin(phase - idx * 0.6) + 1) / 2; // 0 to 1
+          const weight = Math.round(200 + s * 700);
+          span.style.fontWeight = weight;
+          span.style.transform = `translateY(${(0.5 - s) * 10}px) scale(${0.9 + s * 0.25})`;
+          span.style.color = s > 0.6 ? '#818cf8' : '#ffffff';
+        });
+        rafId = requestAnimationFrame(loop);
+      }
+
+      registerCleanup(() => cancelAnimationFrame(rafId));
+      loop();
+      return () => { phase = 0; };
     }
-    function triggerVariableFontWave() {}
+
     function getExportVariableFontWave() {
-      return `/* CSS Variable Font Variation Axis */
-.variable-type {
-  font-family: 'Pretendard', sans-serif;
-  font-variation-settings: 'wght' 700, 'wdth' 100;
-  transition: font-weight 0.2s ease;
-}`;
-    }
-
-    function renderStaggerSplitCascade(container) {
-      container.innerHTML = `
-        <div class="flex flex-col items-center justify-center">
-          <div id="staggerSplitBox" class="flex gap-1.5 text-3xl font-display font-extrabold text-white"></div>
-          <button onclick="triggerStaggerSplitCascade()" class="mt-4 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition">
-            캐스케이드 다시 재생
-          </button>
-        </div>
-      `;
-      triggerStaggerSplitCascade();
-    }
-    function triggerStaggerSplitCascade() {
-      const box = document.getElementById('staggerSplitBox');
-      if (!box) return;
-      box.innerHTML = '';
-      const text = "NEXT GENERATION";
-
-      text.split('').forEach((char, i) => {
-        const span = document.createElement('span');
-        span.innerText = char === ' ' ? '\u00A0' : char;
-        span.style.opacity = '0';
-        span.style.transform = 'translateY(24px) scale(0.8)';
-        span.style.transition = `all 450ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 35}ms`;
-        box.appendChild(span);
-
-        setTimeout(() => {
-          span.style.opacity = '1';
-          span.style.transform = 'translateY(0px) scale(1)';
-        }, 50);
-      });
-      playTone(850, 0.05);
-    }
-    function getExportStaggerSplitCascade() {
-      return `// Split Text Stagger Cascade
-text.split('').forEach((char, idx) => {
-  const span = document.createElement('span');
-  span.innerText = char;
-  span.style.transition = \`all 0.4s ease \${idx * 35}ms\`;
-  container.appendChild(span);
+      return `chars.forEach((span, idx) => {
+  const s = (Math.sin(time - idx * 0.6) + 1) / 2;
+  span.style.fontWeight = Math.round(200 + s * 700);
 });`;
     }
 
-    // -----------------------------------------------------------
-    // 7-1. CANVAS PARTICLES & 7-2. NEON BURST
-    // -----------------------------------------------------------
-    let particleCanvasRaf = null;
-
-    function renderCanvasParticleRepel(container) {
+    // 6-3. STAGGER SPLIT CASCADE
+    function renderStaggerSplitCascade(container) {
       container.innerHTML = `
-        <div class="relative w-80 h-56 rounded-2xl bg-dark-950 border border-white/10 overflow-hidden flex items-center justify-center">
-          <canvas id="particleRepelCanvas" width="320" height="224" class="w-full h-full cursor-pointer"></canvas>
+        <div class="flex flex-col items-center justify-center">
+          <div class="stagger-box flex flex-wrap justify-center gap-1 text-2xl sm:text-3xl font-display font-extrabold text-white"></div>
         </div>
       `;
-      setupCanvasParticleRepel(container.querySelector('#particleRepelCanvas'));
-    }
+      const box = container.querySelector('.stagger-box');
 
-    function setupCanvasParticleRepel(canvas) {
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const dots = [];
-      const numDots = 45;
+      function trigger() {
+        box.innerHTML = '';
+        const text = "SMOOTH STAGGER";
+        text.split('').forEach((char, i) => {
+          const span = document.createElement('span');
+          span.innerText = char === ' ' ? '\u00A0' : char;
+          span.style.opacity = '0';
+          span.style.transform = 'translateY(22px) rotateX(-60deg)';
+          span.style.transition = `all ${(STATE.duration * 0.5) / timeScale}ms ${getBezierCSS()} ${(i * 35) / timeScale}ms`;
+          box.appendChild(span);
 
-      for (let i = 0; i < numDots; i++) {
-        dots.push({
-          origX: Math.random() * canvas.width,
-          origY: Math.random() * canvas.height,
-          x: 0, y: 0,
-          vx: 0, vy: 0
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              span.style.opacity = '1';
+              span.style.transform = 'translateY(0px) rotateX(0deg)';
+            });
+          });
         });
-        dots[i].x = dots[i].origX;
-        dots[i].y = dots[i].origY;
       }
 
-      let mouse = { x: -100, y: -100 };
-      canvas.addEventListener('mousemove', (e) => {
+      trigger();
+      return trigger;
+    }
+
+    function getExportStaggerSplitCascade(fmt, s) {
+      return `text.split('').forEach((ch, i) => {
+  span.style.transition = \`all ${s.duration}ms ${getBezierCSS()} \${i * 35}ms\`;
+});`;
+    }
+
+    // 7-1. CANVAS PARTICLE REPEL (Touch + Mouse + Lifecycle Cleanup)
+    function renderCanvasParticleRepel(container) {
+      container.innerHTML = `
+        <div class="relative w-full max-w-sm h-52 rounded-2xl bg-dark-950 border border-white/10 overflow-hidden flex items-center justify-center">
+          <canvas width="340" height="208" class="repel-canvas w-full h-full cursor-pointer touch-none-drag"></canvas>
+        </div>
+      `;
+      const canvas = container.querySelector('.repel-canvas');
+      const ctx = canvas.getContext('2d');
+      const dots = [];
+      let rafId = null;
+
+      for (let x = 28; x < canvas.width; x += 28) {
+        for (let y = 26; y < canvas.height; y += 26) {
+          dots.push({ origX: x, origY: y, x, y, vx: 0, vy: 0 });
+        }
+      }
+
+      let pointer = { x: -999, y: -999 };
+      canvas.addEventListener('pointermove', (e) => {
         const rect = canvas.getBoundingClientRect();
-        mouse.x = e.clientX - rect.left;
-        mouse.y = e.clientY - rect.top;
+        pointer.x = (e.clientX - rect.left) * (canvas.width / rect.width);
+        pointer.y = (e.clientY - rect.top) * (canvas.height / rect.height);
       });
-      canvas.addEventListener('mouseleave', () => { mouse.x = -100; mouse.y = -100; });
+      canvas.addEventListener('pointerleave', () => { pointer.x = -999; pointer.y = -999; });
 
       function loop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         dots.forEach(d => {
-          // Repulsion from mouse
-          const dx = mouse.x - d.x;
-          const dy = mouse.y - d.y;
+          const dx = pointer.x - d.x;
+          const dy = pointer.y - d.y;
           const dist = Math.hypot(dx, dy);
-          if (dist < 60) {
+          if (dist < 65) {
             const angle = Math.atan2(dy, dx);
-            d.vx -= Math.cos(angle) * 3;
-            d.vy -= Math.sin(angle) * 3;
+            const force = (65 - dist) / 65;
+            d.vx -= Math.cos(angle) * force * 4;
+            d.vy -= Math.sin(angle) * force * 4;
           }
-
-          // Spring return to orig
-          d.vx += (d.origX - d.x) * 0.05;
-          d.vy += (d.origY - d.y) * 0.05;
-          d.vx *= 0.88;
-          d.vy *= 0.88;
+          d.vx += (d.origX - d.x) * 0.08;
+          d.vy += (d.origY - d.y) * 0.08;
+          d.vx *= 0.85;
+          d.vy *= 0.85;
           d.x += d.vx;
           d.y += d.vy;
 
           ctx.beginPath();
           ctx.arc(d.x, d.y, 3, 0, Math.PI * 2);
-          ctx.fillStyle = '#6366f1';
+          ctx.fillStyle = dist < 65 ? '#06b6d4' : '#6366f1';
           ctx.fill();
         });
-
-        particleCanvasRaf = requestAnimationFrame(loop);
+        rafId = requestAnimationFrame(loop);
       }
-      cancelAnimationFrame(particleCanvasRaf);
+
+      registerCleanup(() => cancelAnimationFrame(rafId));
       loop();
-    }
-    function triggerCanvasParticleRepel() {}
-    function getExportCanvasParticleRepel() {
-      return `// HTML5 Canvas Repulsion Particle Swarm Loop
-ctx.clearRect(0, 0, width, height);
-dots.forEach(dot => {
-  const dist = Math.hypot(mouseX - dot.x, mouseY - dot.y);
-  if (dist < 60) {
-    dot.vx -= Math.cos(angle) * 3;
-    dot.vy -= Math.sin(angle) * 3;
-  }
-  dot.vx += (dot.origX - dot.x) * 0.05;
-  dot.x += dot.vx;
-});`;
+
+      return () => {
+        dots.forEach(d => {
+          d.vx = (Math.random() - 0.5) * 18;
+          d.vy = (Math.random() - 0.5) * 18;
+        });
+      };
     }
 
+    function getExportCanvasParticleRepel() {
+      return `const dist = Math.hypot(pointer.x - d.x, pointer.y - d.y);
+if (dist < 65) {
+  d.vx -= Math.cos(angle) * 4;
+  d.vy -= Math.sin(angle) * 4;
+}
+d.vx += (d.origX - d.x) * 0.08;`;
+    }
+
+    // 7-2. NEON BURST SHOCKWAVE
     function renderNeonBurst(container) {
       container.innerHTML = `
-        <div class="relative w-80 h-56 rounded-2xl bg-dark-950 border border-white/10 overflow-hidden flex items-center justify-center" id="burstClickStage">
-          <button onclick="triggerNeonBurst(event)" class="px-6 py-3 rounded-xl bg-accent-pink hover:bg-pink-500 text-white font-bold text-xs shadow-xl shadow-pink-500/30 active:scale-95 transition">
-            폭죽 버스트 팡팡!
+        <div class="burst-stage relative w-full max-w-sm h-52 rounded-2xl bg-dark-950 border border-white/10 overflow-hidden flex items-center justify-center cursor-pointer">
+          <button class="px-5 py-2.5 rounded-xl bg-accent-pink text-white font-bold text-xs shadow-xl pointer-events-none">
+            터치/클릭 지점 폭죽 버스트!
           </button>
         </div>
       `;
-    }
-    function triggerNeonBurst(e) {
-      const stage = document.getElementById('burstClickStage');
-      if (!stage) return;
-      const rect = stage.getBoundingClientRect();
-      const originX = rect.width / 2;
-      const originY = rect.height / 2;
-      const colors = ['#ec4899', '#6366f1', '#06b6d4', '#10b981', '#f59e0b'];
+      const stage = container.querySelector('.burst-stage');
 
-      for (let i = 0; i < 30; i++) {
-        const p = document.createElement('div');
-        const size = Math.random() * 6 + 4;
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const angle = Math.random() * Math.PI * 2;
-        const dist = Math.random() * 90 + 30;
+      function spawnBurst(cx, cy) {
+        const colors = ['#ec4899', '#6366f1', '#06b6d4', '#10b981', '#f59e0b'];
+        for (let i = 0; i < 28; i++) {
+          const p = document.createElement('div');
+          const size = Math.random() * 6 + 4;
+          const color = colors[i % colors.length];
+          const angle = (Math.PI * 2 * i) / 28 + (Math.random() * 0.3);
+          const dist = Math.random() * 80 + 35;
 
-        p.style.cssText = `
-          position: absolute; left: ${originX}px; top: ${originY}px;
-          width: ${size}px; height: ${size}px; border-radius: 50%;
-          background: ${color}; pointer-events: none;
-          transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-          transform: translate(-50%, -50%) scale(1);
-        `;
-        stage.appendChild(p);
+          p.style.cssText = `
+            position: absolute; left: ${cx}px; top: ${cy}px;
+            width: ${size}px; height: ${size}px; border-radius: 9999px;
+            background: ${color}; pointer-events: none;
+            transform: translate(-50%, -50%) scale(1);
+            transition: all ${(STATE.duration * 0.6) / timeScale}ms ${getBezierCSS()};
+          `;
+          stage.appendChild(p);
 
-        requestAnimationFrame(() => {
-          p.style.transform = `translate(${Math.cos(angle) * dist - size/2}px, ${Math.sin(angle) * dist - size/2}px) scale(0)`;
-          p.style.opacity = '0';
-        });
-        setTimeout(() => p.remove(), 650);
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              p.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) scale(0)`;
+              p.style.opacity = '0';
+            });
+          });
+          setTimeout(() => p.remove(), (STATE.duration * 0.65) / timeScale);
+        }
+        playTone(950, 0.06, 'triangle');
       }
-      playTone(950, 0.07, 'triangle');
-    }
-    function getExportNeonBurst() {
-      return `/* JavaScript Particle Burst Generation */
-for (let i = 0; i < 30; i++) {
-  const dot = document.createElement('div');
-  const angle = Math.random() * Math.PI * 2;
-  dot.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-  dot.style.transform = \`translate(\${Math.cos(angle) * 80}px, \${Math.sin(angle) * 80}px) scale(0)\`;
-  container.appendChild(dot);
-}`;
+
+      stage.addEventListener('pointerdown', (e) => {
+        const rect = stage.getBoundingClientRect();
+        spawnBurst(e.clientX - rect.left, e.clientY - rect.top);
+      });
+
+      return () => spawnBurst(stage.clientWidth / 2, stage.clientHeight / 2);
     }
 
-    // -----------------------------------------------------------
-    // 8-1. RADIAL WIPE & 8-2. ROOM 3D FLIP
-    // -----------------------------------------------------------
+    function getExportNeonBurst(fmt, s) {
+      return `dot.style.transition = 'all ${s.duration}ms ${getBezierCSS()}';
+dot.style.transform = \`translate(\${Math.cos(angle) * dist}px, \${Math.sin(angle) * dist}px) scale(0)\`;`;
+    }
+
+    // 8-1. RADIAL WIPE
     function renderRadialWipe(container) {
       container.innerHTML = `
-        <div id="radialStage" class="relative w-80 h-52 rounded-2xl bg-dark-900 border border-white/10 overflow-hidden flex items-center justify-center">
-          <div id="radialUnderlay" class="absolute inset-0 bg-gradient-to-tr from-accent-600 via-indigo-600 to-accent-cyan flex items-center justify-center text-white font-bold text-xs" style="clip-path: circle(0% at 50% 50%); transition: clip-path 0.8s cubic-bezier(0.16, 1, 0.3, 1);">
-            새로운 화면이 원형으로 열렸습니다!
+        <div class="wipe-stage relative w-full max-w-sm h-48 rounded-2xl bg-dark-900 border border-white/10 overflow-hidden flex items-center justify-center cursor-pointer">
+          <div class="wipe-layer absolute inset-0 bg-gradient-to-tr from-accent-600 via-indigo-600 to-accent-cyan flex items-center justify-center text-white font-bold text-xs" style="clip-path: circle(0% at 50% 50%);">
+            방사형 서클 와이프 전환 완료!
           </div>
-          <button onclick="triggerRadialWipe()" class="px-5 py-2.5 rounded-xl bg-dark-800 border border-white/10 text-white font-semibold text-xs shadow-lg relative z-10">
-            방사형 와이프 실행
-          </button>
+          <span class="px-4 py-2 rounded-xl bg-dark-800 border border-white/10 text-white font-semibold text-xs relative z-10 pointer-events-none">
+            화면을 터치하여 원형 와이프
+          </span>
         </div>
       `;
-    }
-    let isRadialOpen = false;
-    function triggerRadialWipe() {
-      isRadialOpen = !isRadialOpen;
-      const underlay = document.getElementById('radialUnderlay');
-      if (underlay) {
-        underlay.style.clipPath = isRadialOpen ? 'circle(150% at 50% 50%)' : 'circle(0% at 50% 50%)';
+      const stage = container.querySelector('.wipe-stage');
+      const layer = container.querySelector('.wipe-layer');
+      let open = false;
+
+      function trigger(cx = '50%', cy = '50%') {
+        open = !open;
+        layer.style.transition = `clip-path ${STATE.duration / timeScale}ms ${getBezierCSS()}`;
+        layer.style.clipPath = open ? `circle(150% at ${cx} ${cy})` : `circle(0% at ${cx} ${cy})`;
       }
-      playTone(isRadialOpen ? 1000 : 600, 0.06);
+
+      stage.addEventListener('pointerdown', (e) => {
+        const rect = stage.getBoundingClientRect();
+        const xPct = `${Math.round(((e.clientX - rect.left) / rect.width) * 100)}%`;
+        const yPct = `${Math.round(((e.clientY - rect.top) / rect.height) * 100)}%`;
+        trigger(xPct, yPct);
+      });
+
+      activeScrubHandler = (p) => {
+        layer.style.transition = 'none';
+        layer.style.clipPath = `circle(${p * 140}% at 50% 50%)`;
+      };
+
+      return () => trigger('50%', '50%');
     }
-    function getExportRadialWipe() {
-      return `/* CSS clip-path Radial Circle Wipe Transition */
-.page-wipe {
+
+    function getExportRadialWipe(fmt, s) {
+      return `.wipe-layer {
   clip-path: circle(0% at 50% 50%);
-  transition: clip-path 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: clip-path ${s.duration}ms ${getBezierCSS()};
 }
-.page-wipe.active {
+.wipe-layer.open {
   clip-path: circle(150% at 50% 50%);
 }`;
     }
 
+    // 8-2. 3D ROOM FLIP (Fixed Backface Mirroring Bug with Real Two-Sided 3D Card)
     function renderRoom3DFlip(container) {
       container.innerHTML = `
-        <div class="perspective-1000 w-64 h-40">
-          <div id="roomCube" class="w-full h-full rounded-2xl bg-gradient-to-tr from-purple-700 to-indigo-600 p-6 flex flex-col justify-between text-white shadow-2xl transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
-            <span class="text-[10px] font-mono text-purple-200">FACE 01</span>
-            <h4 class="font-bold text-sm">3D 공간 룸 전환</h4>
-            <button onclick="triggerRoom3DFlip()" class="px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-xs font-semibold self-start">
-              방 회전하기
-            </button>
+        <div class="perspective-1000 w-64 h-40 cursor-pointer">
+          <div class="cube-inner preserve-3d relative w-full h-full transition-transform duration-700">
+            <!-- Front Face -->
+            <div class="backface-hidden absolute inset-0 rounded-2xl bg-gradient-to-tr from-indigo-700 to-accent-600 p-5 flex flex-col justify-between text-white shadow-2xl border border-white/15">
+              <div class="flex justify-between items-center">
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-black/20">FRONT ROOM 01</span>
+                <i data-lucide="rotate-3d" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-sm">3D 공간 전면 뷰</h4>
+                <p class="text-[11px] text-indigo-100 mt-0.5">터치하면 뒷면 공간으로 회전</p>
+              </div>
+            </div>
+            <!-- Back Face (Pre-rotated 180deg so text is never mirrored!) -->
+            <div class="backface-hidden rotate-y-180 absolute inset-0 rounded-2xl bg-gradient-to-tr from-emerald-700 to-accent-cyan p-5 flex flex-col justify-between text-white shadow-2xl border border-white/15">
+              <div class="flex justify-between items-center">
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-black/20">BACK ROOM 02</span>
+                <i data-lucide="Sparkles" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-sm">3D 공간 후면 뷰</h4>
+                <p class="text-[11px] text-emerald-100 mt-0.5">글자 반전 없이 완벽한 양면 전환</p>
+              </div>
+            </div>
           </div>
         </div>
       `;
-    }
-    let isRoomFlipped = false;
-    function triggerRoom3DFlip() {
-      isRoomFlipped = !isRoomFlipped;
-      const cube = document.getElementById('roomCube');
-      if (cube) {
-        cube.style.transform = isRoomFlipped ? 'rotateY(180deg) scale(0.9)' : 'rotateY(0deg) scale(1)';
+      const inner = container.querySelector('.cube-inner');
+      let flipped = false;
+
+      function toggle() {
+        flipped = !flipped;
+        inner.style.transitionDuration = `${STATE.duration / timeScale}ms`;
+        inner.style.transitionTimingFunction = getBezierCSS();
+        inner.style.transform = flipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
       }
-      playTone(850, 0.05);
+
+      container.firstElementChild.onclick = toggle;
+      activeScrubHandler = (p) => {
+        inner.style.transition = 'none';
+        inner.style.transform = `rotateY(${p * 180}deg)`;
+      };
+      return toggle;
     }
-    function getExportRoom3DFlip() {
-      return `/* 3D Cube Room Flip Transition */
-.room-scene {
-  perspective: 1200px;
-}
-.room-cube {
-  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+
+    function getExportRoom3DFlip(fmt, s) {
+      return `.card-3d {
   transform-style: preserve-3d;
+  transition: transform ${s.duration}ms ${getBezierCSS()};
 }
-.room-cube.flipped {
-  transform: rotateY(180deg);
-}`;
+.face { backface-visibility: hidden; }
+.face-back { transform: rotateY(180deg); }`;
     }
 
     /* ======================================================== */
@@ -2847,10 +2851,8 @@ for (let i = 0; i < 30; i++) {
       buildDomainNavTree();
       selectAnimation('smooth-counter');
       drawBezierInspectors();
-      onTimelineScrub(0);
       lucide.createIcons();
     };
   </script>
 </body>
 </html>
-```
