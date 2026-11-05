@@ -527,11 +527,18 @@
           <div class="space-y-2.5 pt-1">
             <div class="flex justify-between items-center border-b border-white/5 pb-1">
               <span class="text-[11px] font-bold text-indigo-400 tracking-wider uppercase">3. 베지어 곡선 패드 (터치/드래그)</span>
-              <span class="text-[10px] text-slate-500 font-mono">P1, P2 핸들 조작</span>
+              <div class="flex items-center gap-1">
+                <button id="btnClampToggle" onclick="toggleBezierClampMode()" class="px-1.5 py-0.5 rounded bg-dark-800 hover:bg-dark-700 text-[10px] font-mono text-slate-300 border border-white/10 transition" title="핸들 이동 범위 전환">
+                  오버슈트 허용
+                </button>
+                <button onclick="applyPresetCurve('easeOutExpo')" class="px-1.5 py-0.5 rounded bg-dark-800 hover:bg-dark-700 text-[10px] font-mono text-slate-400 hover:text-white border border-white/10 transition" title="곡선 초기화">
+                  리셋
+                </button>
+              </div>
             </div>
             
-            <div class="relative w-full flex items-center justify-center bg-dark-950 rounded-xl border border-white/10 p-2">
-              <canvas id="inspectorBezierCanvas" width="250" height="250" class="cursor-crosshair rounded-lg touch-none-drag"></canvas>
+            <div class="relative w-full flex items-center justify-center bg-dark-950 rounded-xl border border-white/10 p-2 overflow-hidden">
+              <canvas id="inspectorBezierCanvas" width="280" height="280" class="w-full max-w-[280px] h-auto cursor-crosshair rounded-lg touch-none-drag"></canvas>
             </div>
             <div class="p-2 bg-dark-950 rounded-lg border border-white/5 font-mono text-[11px] text-emerald-400 flex justify-between items-center">
               <span id="bezierParamString">cubic-bezier(0.16, 1.00, 0.30, 1.00)</span>
@@ -1454,63 +1461,159 @@
     const bCanvas = document.getElementById('inspectorBezierCanvas');
     const bCtx = bCanvas.getContext('2d');
     let draggingHandle = null;
+    let clampToUnitBox = false; // true: [0, 1] 내부 고정, false: [-0.55, 1.56] 오버슈트 영역 허용
+
+    // 캔버스 내부 좌표 변환 상수 (오버슈트 시에도 절대 화면 밖으로 나가지 않도록 여유 공간 확보)
+    const BEZIER_LAYOUT = {
+      padX: 40,
+      plotW: 200,   // 40px ~ 240px (총 280px 폭 중 중앙 200px)
+      topY: 80,     // Y = 1.0 기준선 (상단 80px 여유 공간에 Overshoot +1.56 수용)
+      plotH: 120,   // Y = 0.0 기준선은 200px (하단 80px 여유 공간에 Anticipate -0.55 수용)
+      minY: -0.55,
+      maxY: 1.56
+    };
+
+    function bezierToX(v) {
+      return BEZIER_LAYOUT.padX + v * BEZIER_LAYOUT.plotW;
+    }
+
+    function bezierToY(v) {
+      return BEZIER_LAYOUT.topY + (1 - v) * BEZIER_LAYOUT.plotH;
+    }
+
+    function toggleBezierClampMode() {
+      clampToUnitBox = !clampToUnitBox;
+      const btn = document.getElementById('btnClampToggle');
+      if (clampToUnitBox) {
+        STATE.p1.y = Math.max(0, Math.min(1, STATE.p1.y));
+        STATE.p2.y = Math.max(0, Math.min(1, STATE.p2.y));
+        btn.innerText = '0~1 영역 고정';
+        btn.className = 'px-1.5 py-0.5 rounded bg-accent-600/30 text-[10px] font-mono text-indigo-300 border border-accent-500/40 transition';
+      } else {
+        btn.innerText = '오버슈트 허용';
+        btn.className = 'px-1.5 py-0.5 rounded bg-dark-800 hover:bg-dark-700 text-[10px] font-mono text-slate-300 border border-white/10 transition';
+      }
+      drawBezierInspectors();
+      updateGeneratedCode();
+      playTone(680, 0.03);
+    }
 
     function drawBezierInspectors() {
       if (!bCanvas) return;
       const w = bCanvas.width;
       const h = bCanvas.height;
-      const pad = 36;
-      const plotW = w - pad * 2;
-      const plotH = h - pad * 2;
+      const { padX, plotW, topY, plotH } = BEZIER_LAYOUT;
 
-      function toX(v) { return pad + v * plotW; }
-      function toY(v) { return pad + (1 - v) * plotH; }
+      // 안전 클램핑: 어떤 경우에도 핸들이 캔버스 밖으로 나가지 않도록 보정
+      const minAllowedY = clampToUnitBox ? 0 : BEZIER_LAYOUT.minY;
+      const maxAllowedY = clampToUnitBox ? 1 : BEZIER_LAYOUT.maxY;
+      STATE.p1.x = Math.max(0, Math.min(1, STATE.p1.x));
+      STATE.p2.x = Math.max(0, Math.min(1, STATE.p2.x));
+      STATE.p1.y = Math.max(minAllowedY, Math.min(maxAllowedY, STATE.p1.y));
+      STATE.p2.y = Math.max(minAllowedY, Math.min(maxAllowedY, STATE.p2.y));
 
       bCtx.clearRect(0, 0, w, h);
 
-      bCtx.strokeStyle = 'rgba(255,255,255,0.08)';
-      bCtx.lineWidth = 1;
-      bCtx.strokeRect(pad, pad, plotW, plotH);
+      // 1. 상·하단 오버슈트 안전 영역 배경 표시
+      bCtx.fillStyle = 'rgba(99, 102, 241, 0.04)';
+      bCtx.fillRect(padX, 12, plotW, topY - 12);
+      bCtx.fillRect(padX, topY + plotH, plotW, (h - 12) - (topY + plotH));
 
+      bCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      bCtx.setLineDash([2, 4]);
+      bCtx.strokeRect(padX, 12, plotW, h - 24);
+      bCtx.setLineDash([]);
+
+      // 오버슈트 가이드 텍스트
+      bCtx.font = '10px "Fira Code", monospace';
+      bCtx.fillStyle = 'rgba(148, 163, 184, 0.35)';
+      bCtx.fillText('OVERSHOOT (+1.56)', padX + 6, 25);
+      bCtx.fillText('ANTICIPATE (-0.55)', padX + 6, h - 18);
+
+      // 2. 중앙 [0, 1] 정규화 코어 박스
+      bCtx.fillStyle = 'rgba(12, 16, 23, 0.65)';
+      bCtx.fillRect(padX, topY, plotW, plotH);
+      bCtx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+      bCtx.lineWidth = 1;
+      bCtx.strokeRect(padX, topY, plotW, plotH);
+
+      // 25%, 50%, 75% 내부 격자선
+      bCtx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
       bCtx.beginPath();
-      bCtx.setLineDash([2, 3]);
-      bCtx.strokeStyle = 'rgba(255,255,255,0.15)';
-      bCtx.moveTo(toX(0), toY(0));
-      bCtx.lineTo(toX(1), toY(1));
+      for (let i = 1; i <= 3; i++) {
+        const gx = padX + (plotW * i) / 4;
+        const gy = topY + (plotH * i) / 4;
+        bCtx.moveTo(gx, topY); bCtx.lineTo(gx, topY + plotH);
+        bCtx.moveTo(padX, gy); bCtx.lineTo(padX + plotW, gy);
+      }
+      bCtx.stroke();
+
+      // 3. 대각선 Linear 기준선
+      bCtx.beginPath();
+      bCtx.setLineDash([3, 3]);
+      bCtx.strokeStyle = 'rgba(255,255,255,0.18)';
+      bCtx.moveTo(bezierToX(0), bezierToY(0));
+      bCtx.lineTo(bezierToX(1), bezierToY(1));
       bCtx.stroke();
       bCtx.setLineDash([]);
 
+      // 4. 제어 핸들 연결선 (Tether Lines)
       bCtx.beginPath();
-      bCtx.strokeStyle = 'rgba(99, 102, 241, 0.45)';
+      bCtx.strokeStyle = 'rgba(129, 140, 248, 0.55)';
       bCtx.lineWidth = 1.5;
-      bCtx.moveTo(toX(0), toY(0));
-      bCtx.lineTo(toX(STATE.p1.x), toY(STATE.p1.y));
-      bCtx.moveTo(toX(1), toY(1));
-      bCtx.lineTo(toX(STATE.p2.x), toY(STATE.p2.y));
+      bCtx.moveTo(bezierToX(0), bezierToY(0));
+      bCtx.lineTo(bezierToX(STATE.p1.x), bezierToY(STATE.p1.y));
       bCtx.stroke();
 
+      bCtx.beginPath();
+      bCtx.strokeStyle = 'rgba(6, 182, 212, 0.55)';
+      bCtx.lineWidth = 1.5;
+      bCtx.moveTo(bezierToX(1), bezierToY(1));
+      bCtx.lineTo(bezierToX(STATE.p2.x), bezierToY(STATE.p2.y));
+      bCtx.stroke();
+
+      // 5. 메인 베지어 곡선
       bCtx.beginPath();
       bCtx.strokeStyle = '#6366f1';
       bCtx.lineWidth = 3;
-      bCtx.moveTo(toX(0), toY(0));
+      bCtx.moveTo(bezierToX(0), bezierToY(0));
       bCtx.bezierCurveTo(
-        toX(STATE.p1.x), toY(STATE.p1.y),
-        toX(STATE.p2.x), toY(STATE.p2.y),
-        toX(1), toY(1)
+        bezierToX(STATE.p1.x), bezierToY(STATE.p1.y),
+        bezierToX(STATE.p2.x), bezierToY(STATE.p2.y),
+        bezierToX(1), bezierToY(1)
       );
       bCtx.stroke();
 
-      function drawPt(pt, col) {
+      // 시작점(0,0) / 끝점(1,1) 고정 핀
+      bCtx.fillStyle = '#94a3b8';
+      bCtx.beginPath();
+      bCtx.arc(bezierToX(0), bezierToY(0), 3.5, 0, Math.PI * 2);
+      bCtx.arc(bezierToX(1), bezierToY(1), 3.5, 0, Math.PI * 2);
+      bCtx.fill();
+
+      // 6. P1, P2 핸들 및 좌표 라벨 렌더링 (화면 밖 잘림 방지)
+      function drawPt(pt, col, label) {
+        const cx = bezierToX(pt.x);
+        const cy = bezierToY(pt.y);
+
         bCtx.beginPath();
-        bCtx.arc(toX(pt.x), toY(pt.y), 7, 0, Math.PI * 2);
+        bCtx.arc(cx, cy, 7.5, 0, Math.PI * 2);
         bCtx.fillStyle = col;
         bCtx.fill();
         bCtx.lineWidth = 2;
         bCtx.strokeStyle = '#ffffff';
         bCtx.stroke();
+
+        bCtx.font = 'bold 10px "Fira Code", monospace';
+        bCtx.fillStyle = '#e2e8f0';
+        const txt = `${label}(${pt.x.toFixed(2)},${pt.y.toFixed(2)})`;
+        const textWidth = bCtx.measureText(txt).width;
+        const tx = Math.max(6, Math.min(w - textWidth - 6, cx - textWidth / 2));
+        const ty = cy < 32 ? cy + 20 : cy - 11;
+        bCtx.fillText(txt, tx, ty);
       }
-      drawPt(STATE.p1, '#818cf8');
-      drawPt(STATE.p2, '#06b6d4');
+      drawPt(STATE.p1, '#818cf8', 'P1');
+      drawPt(STATE.p2, '#06b6d4', 'P2');
 
       const bezierStr = getBezierCSS();
       document.getElementById('bezierParamString').innerText = bezierStr;
@@ -1525,15 +1628,19 @@
       const mCtx = mCanvas.getContext('2d');
       const w = mCanvas.width;
       const h = mCanvas.height;
+      const padX = 6;
+      const topY = 8;
+      const plotH = h - 16;
+
       mCtx.clearRect(0, 0, w, h);
       mCtx.strokeStyle = '#6366f1';
       mCtx.lineWidth = 2;
       mCtx.beginPath();
-      mCtx.moveTo(4, h - 4);
+      mCtx.moveTo(padX, topY + plotH);
       mCtx.bezierCurveTo(
-        4 + STATE.p1.x * (w - 8), (h - 4) - STATE.p1.y * (h - 8),
-        4 + STATE.p2.x * (w - 8), (h - 4) - STATE.p2.y * (h - 8),
-        w - 4, 4
+        padX + STATE.p1.x * (w - padX * 2), topY + (1 - STATE.p1.y) * plotH,
+        padX + STATE.p2.x * (w - padX * 2), topY + (1 - STATE.p2.y) * plotH,
+        w - padX, topY
       );
       mCtx.stroke();
     }
@@ -1543,14 +1650,21 @@
         STATE.p1 = { x: 0.16, y: 1.0 };
         STATE.p2 = { x: 0.30, y: 1.0 };
       } else if (type === 'springOvershoot') {
+        clampToUnitBox = false;
         STATE.p1 = { x: 0.34, y: 1.56 };
         STATE.p2 = { x: 0.64, y: 1.0 };
       } else if (type === 'anticipate') {
+        clampToUnitBox = false;
         STATE.p1 = { x: 0.68, y: -0.55 };
         STATE.p2 = { x: 0.26, y: 1.55 };
       } else if (type === 'linear') {
         STATE.p1 = { x: 0.0, y: 0.0 };
         STATE.p2 = { x: 1.0, y: 1.0 };
+      }
+      const btn = document.getElementById('btnClampToggle');
+      if (btn && !clampToUnitBox) {
+        btn.innerText = '오버슈트 허용';
+        btn.className = 'px-1.5 py-0.5 rounded bg-dark-800 hover:bg-dark-700 text-[10px] font-mono text-slate-300 border border-white/10 transition';
       }
       drawBezierInspectors();
       updateGeneratedCode();
@@ -1562,24 +1676,29 @@
       drawBezierInspectors();
     }
 
-    // Unified Pointer Events for Touch & Mouse on Bezier Pad
+    // Unified Pointer Events for Touch & Mouse on Bezier Pad (Clamped inside Canvas)
     bCanvas.addEventListener('pointerdown', (e) => {
       const rect = bCanvas.getBoundingClientRect();
       const scaleX = bCanvas.width / rect.width;
       const scaleY = bCanvas.height / rect.height;
       const x = (e.clientX - rect.left) * scaleX;
       const y = (e.clientY - rect.top) * scaleY;
-      const pad = 36;
-      const plotW = bCanvas.width - pad * 2;
-      const plotH = bCanvas.height - pad * 2;
-      const p1x = pad + STATE.p1.x * plotW;
-      const p1y = pad + (1 - STATE.p1.y) * plotH;
-      const p2x = pad + STATE.p2.x * plotW;
-      const p2y = pad + (1 - STATE.p2.y) * plotH;
 
-      if (Math.hypot(x - p1x, y - p1y) < 24) draggingHandle = 'p1';
-      else if (Math.hypot(x - p2x, y - p2y) < 24) draggingHandle = 'p2';
-      if (draggingHandle) bCanvas.setPointerCapture(e.pointerId);
+      const p1x = bezierToX(STATE.p1.x);
+      const p1y = bezierToY(STATE.p1.y);
+      const p2x = bezierToX(STATE.p2.x);
+      const p2y = bezierToY(STATE.p2.y);
+
+      const d1 = Math.hypot(x - p1x, y - p1y);
+      const d2 = Math.hypot(x - p2x, y - p2y);
+
+      if (d1 < 28 || d2 < 28) {
+        draggingHandle = d1 <= d2 ? 'p1' : 'p2';
+      } else {
+        // 빈 공간을 터치/클릭해도 더 가까운 핸들을 즉시 끌어올 수 있도록 지원
+        draggingHandle = d1 <= d2 ? 'p1' : 'p2';
+      }
+      bCanvas.setPointerCapture(e.pointerId);
     });
 
     bCanvas.addEventListener('pointermove', (e) => {
@@ -1589,12 +1708,13 @@
       const scaleY = bCanvas.height / rect.height;
       const x = (e.clientX - rect.left) * scaleX;
       const y = (e.clientY - rect.top) * scaleY;
-      const pad = 36;
-      const plotW = bCanvas.width - pad * 2;
-      const plotH = bCanvas.height - pad * 2;
 
-      const normX = Math.max(0, Math.min(1, (x - pad) / plotW));
-      const normY = Math.max(-0.6, Math.min(1.6, parseFloat((1 - (y - pad) / plotH).toFixed(2))));
+      const { padX, plotW, topY, plotH, minY, maxY } = BEZIER_LAYOUT;
+      const allowedMinY = clampToUnitBox ? 0.0 : minY;
+      const allowedMaxY = clampToUnitBox ? 1.0 : maxY;
+
+      const normX = Math.max(0, Math.min(1, parseFloat(((x - padX) / plotW).toFixed(2))));
+      const normY = Math.max(allowedMinY, Math.min(allowedMaxY, parseFloat((1 - (y - topY) / plotH).toFixed(2))));
 
       if (draggingHandle === 'p1') {
         STATE.p1.x = normX;
