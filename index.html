@@ -257,7 +257,7 @@
             <span>8대 도메인 카탈로그</span>
           </span>
           <div class="flex items-center gap-1.5">
-            <span id="catalogCountBadge" class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-dark-800 text-slate-300">22종</span>
+            <span id="catalogCountBadge" class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-dark-800 text-slate-300">27종</span>
             <button onclick="closeAllMobileDrawers()" class="lg:hidden p-1 rounded hover:bg-white/10 text-slate-400">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
@@ -870,6 +870,56 @@
         tags: ['#Parallax', '#Depth', '#3D'],
         render: renderParallaxDepth,
         export: getExportParallaxDepth
+      },
+      {
+        id: 'scroll-apple-morph',
+        domain: 'scroll',
+        name: '애플 스타일 스티키 디바이스 분해 & 결합',
+        tech: '3D CSS + Virtual Scroll',
+        desc: '스크롤 휠/드래그에 따라 디바이스가 3D 회전하며 정면으로 오고, 부품이 분해(Exploded)되었다가 빛을 내며 결합합니다.',
+        tags: ['#Apple', '#StickyPin', '#ExplodedView', '#Scroll'],
+        render: renderScrollAppleMorph,
+        export: getExportScrollAppleMorph
+      },
+      {
+        id: 'scroll-card-stack',
+        domain: 'scroll',
+        name: '카드 스태킹 덱 (Stacking & Depth)',
+        tech: 'CSS Transform + Scale',
+        desc: '다음 카드가 위로 덮어씌워질 때 이전 카드가 축소(Scale-down)되고 어두워지며 뒤로 안착되는 덱 스택 효과입니다.',
+        tags: ['#CardStack', '#Overlap', '#ScaleDown', '#Scroll'],
+        render: renderScrollCardStack,
+        export: getExportScrollCardStack
+      },
+      {
+        id: 'scroll-horizontal-rail',
+        domain: 'scroll',
+        name: '세로 휠 &rarr; 가로 파노라마 레일 전환',
+        tech: 'JS Horizontal Track',
+        desc: '상하(세로) 마우스 휠이나 스와이프 입력을 가로 레일 이동으로 매핑하여 다층 시차 파노라마를 펼쳐냅니다.',
+        tags: ['#HorizontalScroll', '#Rail', '#Panorama', '#Scroll'],
+        render: renderScrollHorizontalRail,
+        export: getExportScrollHorizontalRail
+      },
+      {
+        id: 'scroll-mask-zoom',
+        domain: 'scroll',
+        name: '시네마틱 줌인 마스크 관통 (Mask Zoom)',
+        tech: 'CSS Clip-path & Scale',
+        desc: '중앙의 텍스트/렌즈 구멍이 거대하게 확대(Scale 45x)되면서 그 안쪽에 숨겨져 있던 새로운 차원의 공간으로 관통합니다.',
+        tags: ['#MaskZoom', '#Cinematic', '#Penetration', '#Scroll'],
+        render: renderScrollMaskZoom,
+        export: getExportScrollMaskZoom
+      },
+      {
+        id: 'scroll-fullpage-snap',
+        domain: 'scroll',
+        name: '원스크롤 풀페이지 자석 스냅 (Fullpage Snap)',
+        tech: 'Scroll Snap & Momentum',
+        desc: '어정쩡하게 멈추지 않고 휠이나 제스처 한 번에 PPT 슬라이드처럼 다음 100vh 섹션으로 탄성 있게 안착합니다.',
+        tags: ['#Fullpage', '#Snap', '#Magnetic', '#Scroll'],
+        render: renderScrollFullpageSnap,
+        export: getExportScrollFullpageSnap
       },
       {
         id: 'spring-toss',
@@ -2316,220 +2366,1240 @@ el.animate([
 });`;
     }
 
-    // 4-1. SPRING TOSS & BOUNDS (Unified Pointer/Touch Gesture + No Window Listener Leak)
+    // 3-3. APPLE STYLE STICKY DEVICE PIN & EXPLODED MORPH
+    function renderScrollAppleMorph(container) {
+      container.innerHTML = `
+        <div class="apple-scroll-stage relative w-full h-full flex flex-col items-center justify-between p-3 select-none touch-none-drag overflow-hidden">
+          <!-- Top Phase Quick Navigation & Indicator -->
+          <div class="w-full flex items-center justify-between gap-2 z-20">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">STICKY PIN</span>
+              <span class="text-xs font-semibold text-white truncate phase-badge">Phase 1: 3D 회전</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button class="step-btn-1 px-2 py-1 rounded bg-dark-800 hover:bg-dark-700 text-[10px] font-mono text-slate-300 border border-white/10">01 외관</button>
+              <button class="step-btn-2 px-2 py-1 rounded bg-dark-800 hover:bg-dark-700 text-[10px] font-mono text-slate-300 border border-white/10">02 분해</button>
+              <button class="step-btn-3 px-2 py-1 rounded bg-dark-800 hover:bg-dark-700 text-[10px] font-mono text-slate-300 border border-white/10">03 결합</button>
+            </div>
+          </div>
+
+          <!-- Central 3D Device Container -->
+          <div class="relative flex-1 w-full flex items-center justify-center perspective-1000 py-2">
+            <!-- Aura Glow Ring for Phase 3 -->
+            <div class="apple-aura absolute w-60 h-60 rounded-full bg-gradient-to-tr from-accent-cyan via-indigo-500 to-pink-500 blur-2xl opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+
+            <div class="device-rig preserve-3d relative w-48 sm:w-56 h-64 sm:h-72 transition-transform duration-75 ease-out flex items-center justify-center">
+              <!-- Back Chassis Frame -->
+              <div class="part-back absolute inset-0 rounded-[32px] bg-gradient-to-b from-slate-800 via-dark-900 to-black border-2 border-slate-700/60 shadow-2xl transition-transform duration-100 flex flex-col justify-between p-4">
+                <div class="w-8 h-8 rounded-full border border-slate-600/40 flex items-center justify-center">
+                  <i data-lucide="aperture" class="w-4 h-4 text-slate-400"></i>
+                </div>
+                <div class="text-[9px] font-mono text-slate-500 text-center">TITANIUM 5-GRADE</div>
+              </div>
+
+              <!-- Internal PCB & Glowing Neural Chip -->
+              <div class="part-chip absolute w-36 h-44 rounded-2xl bg-dark-950/90 border border-indigo-500/40 p-3 shadow-lg flex flex-col items-center justify-center transition-all duration-100 z-10">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-accent-cyan to-indigo-600 p-[1.5px] shadow-lg shadow-cyan-500/30 flex items-center justify-center">
+                  <div class="w-full h-full bg-dark-950 rounded-[10px] flex flex-col items-center justify-center">
+                    <span class="font-display font-extrabold text-[11px] text-cyan-300">M4</span>
+                    <span class="text-[8px] font-mono text-indigo-400">ULTRA</span>
+                  </div>
+                </div>
+                <span class="text-[9px] font-mono text-slate-300 mt-2 font-semibold">NEURAL CORE</span>
+                <span class="text-[8px] font-mono text-cyan-400 chip-spec">38-CORE GPU</span>
+              </div>
+
+              <!-- Camera Sapphire Lenses (Floats out) -->
+              <div class="part-lens absolute top-3 left-4 w-12 h-12 rounded-2xl bg-dark-950/80 border border-cyan-400/50 shadow-md flex items-center justify-center transition-transform duration-100 z-20">
+                <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-400 to-indigo-500 p-0.5">
+                  <div class="w-full h-full bg-dark-950 rounded-full"></div>
+                </div>
+              </div>
+
+              <!-- Front Glass Display -->
+              <div class="part-front absolute inset-0 rounded-[32px] bg-gradient-to-tr from-indigo-950/70 via-dark-950/80 to-cyan-950/60 border-2 border-indigo-400/40 shadow-2xl transition-all duration-100 z-30 p-4 flex flex-col justify-between overflow-hidden backdrop-blur-[2px]">
+                <!-- Dynamic Island / Speaker -->
+                <div class="w-14 h-3.5 bg-black rounded-full mx-auto border border-white/10 flex items-center justify-end pr-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                </div>
+                <div class="text-center my-auto">
+                  <h3 class="font-display font-extrabold text-base sm:text-lg text-white tracking-tight title-text">AEROSPACE</h3>
+                  <p class="text-[10px] text-indigo-300 font-mono mt-0.5 desc-text">항공우주 티타늄 아키텍처</p>
+                </div>
+                <!-- Shimmer Light Bar -->
+                <div class="shimmer-bar absolute -inset-full bg-gradient-to-tr from-transparent via-white/20 to-transparent pointer-events-none transform -translate-x-full"></div>
+                <div class="flex justify-between items-center text-[9px] font-mono text-slate-400 border-t border-white/10 pt-1.5">
+                  <span>120Hz PROMOTION</span>
+                  <span class="text-emerald-400 font-bold">READY</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Scrub Guide & Progress Track -->
+          <div class="w-full max-w-sm bg-dark-900/90 rounded-xl p-2.5 border border-white/10 flex items-center gap-2.5 z-20">
+            <i data-lucide="mouse" class="w-4 h-4 text-accent-cyan shrink-0"></i>
+            <div class="flex-1">
+              <div class="flex justify-between text-[10px] font-mono text-slate-400 mb-1">
+                <span>SCROLL PROGRESS</span>
+                <span class="text-cyan-300 font-bold pct-label">0%</span>
+              </div>
+              <div class="w-full h-1.5 bg-dark-950 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-accent-600 via-accent-cyan to-pink-500 rounded-full w-0 inner-prog-bar"></div>
+              </div>
+            </div>
+            <span class="text-[10px] text-slate-400 hidden sm:inline">휠/터치 스크롤</span>
+          </div>
+        </div>
+      `;
+
+      const stage = container.querySelector('.apple-scroll-stage');
+      const rig = container.querySelector('.device-rig');
+      const front = container.querySelector('.part-front');
+      const chip = container.querySelector('.part-chip');
+      const lens = container.querySelector('.part-lens');
+      const back = container.querySelector('.part-back');
+      const aura = container.querySelector('.apple-aura');
+      const shimmer = container.querySelector('.shimmer-bar');
+      const badge = container.querySelector('.phase-badge');
+      const title = container.querySelector('.title-text');
+      const desc = container.querySelector('.desc-text');
+      const pctLabel = container.querySelector('.pct-label');
+      const progBar = container.querySelector('.inner-prog-bar');
+
+      let scrollProgress = 0;
+      let targetProgress = 0;
+      let animRaf = null;
+
+      function applyProgress(p) {
+        scrollProgress = Math.max(0, Math.min(1, p));
+        const pct = Math.round(scrollProgress * 100);
+        pctLabel.innerText = `${pct}%`;
+        progBar.style.width = `${pct}%`;
+
+        if (scrollProgress <= 0.33) {
+          // PHASE 1: 0% -> 33% (Rotate in 3D from side angle to front)
+          const norm = scrollProgress / 0.33;
+          const rotY = -35 * (1 - norm);
+          const rotX = 18 * (1 - norm);
+          rig.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg) scale(${0.88 + norm * 0.12})`;
+          
+          front.style.transform = `translateZ(0px)`;
+          chip.style.transform = `translateZ(0px)`;
+          lens.style.transform = `translateZ(0px)`;
+          back.style.transform = `translateZ(0px)`;
+          aura.style.opacity = '0';
+          shimmer.style.transform = `translateX(-100%)`;
+
+          badge.innerText = "Phase 1: 3D 회전 안착";
+          badge.className = "text-xs font-semibold text-white truncate phase-badge";
+          title.innerText = "AEROSPACE TITANIUM";
+          desc.innerText = "항공우주 5등급 티타늄 바디";
+        } else if (scrollProgress <= 0.67) {
+          // PHASE 2: 34% -> 67% (EXPLODED VIEW - Parts separate forward/backward)
+          const norm = (scrollProgress - 0.33) / 0.34;
+          rig.style.transform = `rotateY(${norm * 14}deg) rotateX(${-norm * 10}deg) scale(1.02)`;
+
+          const frontZ = norm * 55;
+          const chipZ = norm * 15;
+          const lensZ = norm * 85;
+          const backZ = -norm * 45;
+
+          front.style.transform = `translateZ(${frontZ}px)`;
+          front.style.opacity = `${1 - norm * 0.35}`;
+          chip.style.transform = `translateZ(${chipZ}px) scale(${1 + norm * 0.12})`;
+          lens.style.transform = `translateZ(${lensZ}px)`;
+          back.style.transform = `translateZ(${backZ}px)`;
+          aura.style.opacity = `${norm * 0.45}`;
+          shimmer.style.transform = `translateX(-100%)`;
+
+          badge.innerText = "Phase 2: M4 칩셋 분해 뷰";
+          badge.className = "text-xs font-semibold text-accent-cyan truncate phase-badge";
+          title.innerText = "M4 ULTRA 2nm";
+          desc.innerText = "초소형 뉴럴 가속 엔진 노출";
+        } else {
+          // PHASE 3: 68% -> 100% (REASSEMBLY + ENERGY AURA + CTA)
+          const norm = (scrollProgress - 0.67) / 0.33;
+          rig.style.transform = `rotateY(0deg) rotateX(0deg) scale(${1.02 + norm * 0.06})`;
+
+          const frontZ = (1 - norm) * 55;
+          const chipZ = (1 - norm) * 15;
+          const lensZ = (1 - norm) * 85;
+          const backZ = -(1 - norm) * 45;
+
+          front.style.transform = `translateZ(${frontZ}px)`;
+          front.style.opacity = '1';
+          chip.style.transform = `translateZ(${chipZ}px)`;
+          lens.style.transform = `translateZ(${lensZ}px)`;
+          back.style.transform = `translateZ(${backZ}px)`;
+          
+          aura.style.opacity = `${0.45 + norm * 0.55}`;
+          shimmer.style.transform = `translateX(${-100 + norm * 240}%)`;
+
+          badge.innerText = "Phase 3: 결합 및 파워 발광";
+          badge.className = "text-xs font-semibold text-emerald-400 truncate phase-badge";
+          title.innerText = "ULTIMATE PERFORMANCE";
+          desc.innerText = "궁극의 파워를 경험하세요";
+        }
+      }
+
+      activeScrubHandler = (p) => {
+        targetProgress = p;
+        applyProgress(p);
+      };
+
+      // Virtual Scroll with Wheel
+      function onWheel(e) {
+        e.preventDefault();
+        targetProgress += e.deltaY * 0.0012;
+        targetProgress = Math.max(0, Math.min(1, targetProgress));
+        applyProgress(targetProgress);
+        updateScrubberUIOnly(targetProgress);
+      }
+      stage.addEventListener('wheel', onWheel, { passive: false });
+
+      // Touch Drag Gestures
+      let isPointerDown = false;
+      let lastPointerY = 0;
+
+      stage.addEventListener('pointerdown', (e) => {
+        isPointerDown = true;
+        lastPointerY = e.clientY;
+        stage.setPointerCapture(e.pointerId);
+      });
+      stage.addEventListener('pointermove', (e) => {
+        if (!isPointerDown) return;
+        const dy = lastPointerY - e.clientY;
+        lastPointerY = e.clientY;
+        targetProgress += dy * 0.005;
+        targetProgress = Math.max(0, Math.min(1, targetProgress));
+        applyProgress(targetProgress);
+        updateScrubberUIOnly(targetProgress);
+      });
+      stage.addEventListener('pointerup', (e) => {
+        if (isPointerDown) {
+          isPointerDown = false;
+          stage.releasePointerCapture(e.pointerId);
+        }
+      });
+
+      // Quick Phase Buttons
+      container.querySelector('.step-btn-1').onclick = () => { animateToProgress(0.15); };
+      container.querySelector('.step-btn-2').onclick = () => { animateToProgress(0.50); };
+      container.querySelector('.step-btn-3').onclick = () => { animateToProgress(0.95); };
+
+      function animateToProgress(dest) {
+        const start = scrollProgress;
+        const duration = STATE.duration / timeScale;
+        let t0 = null;
+        function step(now) {
+          if (!t0) t0 = now;
+          const p = Math.min((now - t0) / duration, 1);
+          const eased = evaluateCubicBezier(p);
+          const cur = start + (dest - start) * eased;
+          applyProgress(cur);
+          updateScrubberUIOnly(cur);
+          if (p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
+
+      registerCleanup(() => {
+        stage.removeEventListener('wheel', onWheel);
+        if (animRaf) cancelAnimationFrame(animRaf);
+      });
+
+      applyProgress(0);
+      return () => animateToProgress(scrollProgress > 0.8 ? 0 : 1);
+    }
+
+    function getExportScrollAppleMorph(fmt, s) {
+      return `/* 1. HTML/CSS: CSS Sticky + 3D Transform-Style */
+.product-viewport {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  perspective: 1000px;
+}
+.device-rig {
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease-out;
+}
+/* 2. Scroll-Linked JS: Map scroll progress to 3D Exploded Depth */
+window.addEventListener('scroll', () => {
+  const progress = window.scrollY / (maxScroll);
+  if (progress < 0.33) {
+    // Phase 1: Rotate
+    rig.style.transform = \`rotateY(\${-35 * (1 - progress/0.33)}deg)\`;
+  } else if (progress < 0.67) {
+    // Phase 2: Explode
+    const n = (progress - 0.33) / 0.34;
+    frontGlass.style.transform = \`translateZ(\${n * 55}px)\`;
+    chipPCB.style.transform = \`translateZ(\${n * 15}px)\`;
+  } else {
+    // Phase 3: Reassemble & Glow
+    rig.style.transform = 'rotateY(0deg) scale(1.08)';
+    auraGlow.style.opacity = '1';
+  }
+});`;
+    }
+
+    // 3-4. CARD STACKING & OVERLAP DEPTH
+    function renderScrollCardStack(container) {
+      container.innerHTML = `
+        <div class="card-stack-stage relative w-full h-full flex flex-col justify-between p-3 select-none touch-none-drag overflow-hidden">
+          <!-- Stack Header & Jump Buttons -->
+          <div class="flex items-center justify-between gap-2 z-20">
+            <span class="text-xs font-semibold text-white flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+              <span>카드 스태킹 덱 (Stacking)</span>
+            </span>
+            <div class="flex items-center gap-1">
+              <button class="stack-btn-1 px-2 py-0.5 rounded bg-dark-800 text-[10px] font-mono text-slate-300 border border-white/10">Card 1</button>
+              <button class="stack-btn-2 px-2 py-0.5 rounded bg-dark-800 text-[10px] font-mono text-slate-300 border border-white/10">Card 2</button>
+              <button class="stack-btn-3 px-2 py-0.5 rounded bg-dark-800 text-[10px] font-mono text-slate-300 border border-white/10">Card 3</button>
+            </div>
+          </div>
+
+          <!-- Stack Viewport Canvas -->
+          <div class="relative flex-1 w-full max-w-sm mx-auto flex items-center justify-center my-2">
+            <!-- Card 1 -->
+            <div class="stack-card card-1 absolute inset-x-2 top-4 bottom-4 rounded-2xl bg-gradient-to-br from-indigo-900 via-indigo-950 to-dark-900 border border-indigo-500/30 p-5 shadow-2xl flex flex-col justify-between transition-all duration-75">
+              <div class="flex justify-between items-center text-xs font-mono text-indigo-400">
+                <span class="font-bold">#01 / 03</span>
+                <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">ASYNC ENGINE</span>
+              </div>
+              <div>
+                <h3 class="text-base sm:text-lg font-bold text-white">비동기 렌더 파이프라인</h3>
+                <p class="text-xs text-indigo-200/80 mt-1">메인 스레드 락 없이 120fps 부드러운 스크롤을 유지합니다.</p>
+              </div>
+              <div class="text-[10px] font-mono text-slate-400 border-t border-white/10 pt-2 flex justify-between">
+                <span>GPU COMPOSITOR</span>
+                <span class="text-emerald-400">ACTIVE</span>
+              </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="stack-card card-2 absolute inset-x-2 top-4 bottom-4 rounded-2xl bg-gradient-to-br from-cyan-950 via-teal-950 to-dark-900 border border-cyan-500/30 p-5 shadow-2xl flex flex-col justify-between transition-all duration-75">
+              <div class="flex justify-between items-center text-xs font-mono text-cyan-400">
+                <span class="font-bold">#02 / 03</span>
+                <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">FLIP MOTION</span>
+              </div>
+              <div>
+                <h3 class="text-base sm:text-lg font-bold text-white">제로 리플로우 레이아웃</h3>
+                <p class="text-xs text-cyan-200/80 mt-1">First-Last-Invert-Play 역행렬로 레이아웃 시프트를 완벽 방어합니다.</p>
+              </div>
+              <div class="text-[10px] font-mono text-slate-400 border-t border-white/10 pt-2 flex justify-between">
+                <span>REFLOW RATE</span>
+                <span class="text-cyan-300 font-bold">0.00%</span>
+              </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="stack-card card-3 absolute inset-x-2 top-4 bottom-4 rounded-2xl bg-gradient-to-br from-purple-950 via-pink-950 to-dark-900 border border-pink-500/30 p-5 shadow-2xl flex flex-col justify-between transition-all duration-75">
+              <div class="flex justify-between items-center text-xs font-mono text-pink-400">
+                <span class="font-bold">#03 / 03</span>
+                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/30">QUANTUM DEPTH</span>
+              </div>
+              <div>
+                <h3 class="text-base sm:text-lg font-bold text-white">동적 깊이감 오버랩</h3>
+                <p class="text-xs text-pink-200/80 mt-1">카드가 쌓일 때마다 뒷면의 카드가 차례로 축소되며 암전 처리됩니다.</p>
+              </div>
+              <div class="text-[10px] font-mono text-slate-400 border-t border-white/10 pt-2 flex justify-between">
+                <span>STACK DEPTH</span>
+                <span class="text-pink-400 font-bold">3-LAYERS</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Prompt Track -->
+          <div class="w-full max-w-sm mx-auto bg-dark-900/90 rounded-xl px-3 py-2 border border-white/10 flex items-center justify-between text-xs z-20">
+            <span class="text-slate-400 flex items-center gap-1.5 text-[11px]">
+              <i data-lucide="arrow-down-up" class="w-3.5 h-3.5 text-accent-cyan"></i>
+              <span>마우스 휠이나 터치로 스크롤하여 덮기</span>
+            </span>
+            <span class="font-mono text-indigo-300 font-bold card-prog-label">0%</span>
+          </div>
+        </div>
+      `;
+
+      const stage = container.querySelector('.card-stack-stage');
+      const c1 = container.querySelector('.card-1');
+      const c2 = container.querySelector('.card-2');
+      const c3 = container.querySelector('.card-3');
+      const progLabel = container.querySelector('.card-prog-label');
+
+      let progress = 0;
+
+      function updateCards(p) {
+        progress = Math.max(0, Math.min(1, p));
+        progLabel.innerText = `${Math.round(progress * 100)}%`;
+
+        // Card 1 behavior:
+        // 0 -> 0.5: shrinks scale 1 -> 0.93, translateY 0 -> -16px, brightness 100% -> 70%
+        // 0.5 -> 1.0: shrinks scale 0.93 -> 0.86, translateY -16 -> -32px, brightness 70% -> 45%
+        const c1Scale = 1 - progress * 0.14;
+        const c1Y = -progress * 28;
+        const c1Bright = 1 - progress * 0.55;
+        c1.style.transform = `translateY(${c1Y}px) scale(${c1Scale})`;
+        c1.style.filter = `brightness(${c1Bright})`;
+        c1.style.zIndex = '1';
+
+        // Card 2 behavior:
+        // 0 -> 0.5: slides up from 100% to 0%
+        // 0.5 -> 1.0: shrinks scale 1 -> 0.93, translateY 0 -> -16px, brightness 100% -> 70%
+        if (progress <= 0.5) {
+          const norm = progress / 0.5;
+          const yPct = (1 - norm) * 110;
+          c2.style.transform = `translateY(${yPct}%) scale(1)`;
+          c2.style.filter = 'brightness(1)';
+          c2.style.zIndex = '2';
+        } else {
+          const norm = (progress - 0.5) / 0.5;
+          const c2Scale = 1 - norm * 0.08;
+          const c2Y = -norm * 18;
+          const c2Bright = 1 - norm * 0.35;
+          c2.style.transform = `translateY(${c2Y}px) scale(${c2Scale})`;
+          c2.style.filter = `brightness(${c2Bright})`;
+          c2.style.zIndex = '2';
+        }
+
+        // Card 3 behavior:
+        // 0 -> 0.5: stays hidden at 110%
+        // 0.5 -> 1.0: slides up from 110% to 0%
+        if (progress <= 0.5) {
+          c3.style.transform = `translateY(115%) scale(1)`;
+          c3.style.filter = 'brightness(1)';
+          c3.style.zIndex = '3';
+        } else {
+          const norm = (progress - 0.5) / 0.5;
+          const yPct = (1 - norm) * 110;
+          c3.style.transform = `translateY(${yPct}%) scale(1)`;
+          c3.style.filter = 'brightness(1)';
+          c3.style.zIndex = '3';
+        }
+      }
+
+      activeScrubHandler = (p) => {
+        updateCards(p);
+      };
+
+      function onWheel(e) {
+        e.preventDefault();
+        progress += e.deltaY * 0.0012;
+        progress = Math.max(0, Math.min(1, progress));
+        updateCards(progress);
+        updateScrubberUIOnly(progress);
+      }
+      stage.addEventListener('wheel', onWheel, { passive: false });
+
+      // Touch swipe
+      let startY = 0;
+      stage.addEventListener('pointerdown', (e) => {
+        startY = e.clientY;
+        stage.setPointerCapture(e.pointerId);
+      });
+      stage.addEventListener('pointermove', (e) => {
+        if (!e.buttons) return;
+        const dy = startY - e.clientY;
+        startY = e.clientY;
+        progress += dy * 0.005;
+        progress = Math.max(0, Math.min(1, progress));
+        updateCards(progress);
+        updateScrubberUIOnly(progress);
+      });
+
+      function snapTo(pDest) {
+        const pStart = progress;
+        const dur = STATE.duration / timeScale;
+        let t0 = null;
+        function step(now) {
+          if (!t0) t0 = now;
+          const p = Math.min((now - t0) / dur, 1);
+          const cur = pStart + (pDest - pStart) * evaluateCubicBezier(p);
+          updateCards(cur);
+          updateScrubberUIOnly(cur);
+          if (p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
+
+      container.querySelector('.stack-btn-1').onclick = () => snapTo(0);
+      container.querySelector('.stack-btn-2').onclick = () => snapTo(0.5);
+      container.querySelector('.stack-btn-3').onclick = () => snapTo(1.0);
+
+      registerCleanup(() => stage.removeEventListener('wheel', onWheel));
+      updateCards(0);
+      return () => snapTo(progress > 0.6 ? 0 : 1);
+    }
+
+    function getExportScrollCardStack(fmt, s) {
+      return `/* Card Stacking Effect */
+cards.forEach((card, index) => {
+  const cardProgress = Math.min(Math.max((scroll - index * step) / step, 0), 1);
+  // 이전 카드는 작아지며 어두워짐
+  card.style.transform = \`translateY(\${-cardProgress * 28}px) scale(\${1 - cardProgress * 0.12})\`;
+  card.style.filter = \`brightness(\${1 - cardProgress * 0.45})\`;
+});`;
+    }
+
+    // 3-5. HORIZONTAL PINNED RAIL TRANSITION
+    function renderScrollHorizontalRail(container) {
+      container.innerHTML = `
+        <div class="h-rail-stage relative w-full h-full flex flex-col justify-between p-3 select-none touch-none-drag overflow-hidden">
+          <!-- Header Bar -->
+          <div class="flex items-center justify-between gap-2 z-20">
+            <div class="flex items-center gap-1.5 text-xs text-white font-semibold">
+              <span class="w-2 h-2 rounded-full bg-accent-cyan animate-pulse"></span>
+              <span>가로 파노라마 레일 트랙</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button class="rail-btn-1 px-2 py-0.5 rounded bg-dark-800 text-[10px] font-mono text-slate-300 border border-white/10">01</button>
+              <button class="rail-btn-2 px-2 py-0.5 rounded bg-dark-800 text-[10px] font-mono text-slate-300 border border-white/10">02</button>
+              <button class="rail-btn-3 px-2 py-0.5 rounded bg-dark-800 text-[10px] font-mono text-slate-300 border border-white/10">03</button>
+              <button class="rail-btn-4 px-2 py-0.5 rounded bg-dark-800 text-[10px] font-mono text-slate-300 border border-white/10">04</button>
+            </div>
+          </div>
+
+          <!-- Horizontal Sliding Viewport -->
+          <div class="relative flex-1 w-full overflow-hidden my-2 rounded-2xl border border-white/10 bg-dark-950 flex items-center">
+            <div class="rail-track flex h-full transition-transform duration-75 ease-out" style="width: 400%;">
+              <!-- Panel 1 -->
+              <div class="w-1/4 h-full p-4 sm:p-6 flex flex-col justify-between border-r border-white/10 bg-gradient-to-br from-indigo-950/40 to-dark-900">
+                <span class="text-xs font-mono text-indigo-400 font-bold">PANORAMA SECTION 01</span>
+                <div>
+                  <h3 class="text-lg sm:text-2xl font-extrabold text-white">가로 무한 확장 레일</h3>
+                  <p class="text-xs text-slate-400 mt-1">마우스 휠은 아래로 굴리지만 뷰포트는 오른쪽으로 질주합니다.</p>
+                </div>
+                <div class="flex items-center gap-2 text-[10px] font-mono text-indigo-300">
+                  <i data-lucide="arrow-right" class="w-4 h-4"></i> 계속 스크롤하세요
+                </div>
+              </div>
+
+              <!-- Panel 2 -->
+              <div class="w-1/4 h-full p-4 sm:p-6 flex flex-col justify-between border-r border-white/10 bg-gradient-to-br from-cyan-950/40 to-dark-900">
+                <span class="text-xs font-mono text-accent-cyan font-bold">VELOCITY SHIFT 02</span>
+                <div>
+                  <h3 class="text-lg sm:text-2xl font-extrabold text-white">시차 패럴랙스 카드</h3>
+                  <p class="text-xs text-slate-400 mt-1">각 섹션 내부의 카드들이 서로 다른 속도로 역방향 슬라이드됩니다.</p>
+                </div>
+                <div class="p-3 rounded-xl bg-dark-900/80 border border-cyan-500/20 text-[10px] text-cyan-200 font-mono">
+                  PARALLAX RATIO: 1.45x
+                </div>
+              </div>
+
+              <!-- Panel 3 -->
+              <div class="w-1/4 h-full p-4 sm:p-6 flex flex-col justify-between border-r border-white/10 bg-gradient-to-br from-purple-950/40 to-dark-900">
+                <span class="text-xs font-mono text-pink-400 font-bold">SPATIAL GRID 03</span>
+                <div>
+                  <h3 class="text-lg sm:text-2xl font-extrabold text-white">공간 아키텍처</h3>
+                  <p class="text-xs text-slate-400 mt-1">CSS transform translateX 기반으로 모바일 GPU 부하가 0%에 수렴합니다.</p>
+                </div>
+                <div class="p-3 rounded-xl bg-dark-900/80 border border-pink-500/20 text-[10px] text-pink-200 font-mono">
+                  COMPOSITED ONLY
+                </div>
+              </div>
+
+              <!-- Panel 4 -->
+              <div class="w-1/4 h-full p-4 sm:p-6 flex flex-col justify-between bg-gradient-to-br from-emerald-950/40 to-dark-900">
+                <span class="text-xs font-mono text-emerald-400 font-bold">FINALE SECTION 04</span>
+                <div>
+                  <h3 class="text-lg sm:text-2xl font-extrabold text-white">가로 레일 완주</h3>
+                  <p class="text-xs text-slate-400 mt-1">4개 섹션 탐색이 완료되면 다시 일반 세로 스크롤로 매끄럽게 연결됩니다.</p>
+                </div>
+                <div class="text-emerald-400 text-xs font-bold font-mono">
+                  REACHED END POINT &check;
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Rail Progress -->
+          <div class="w-full bg-dark-900/90 rounded-xl px-3 py-2 border border-white/10 flex items-center justify-between text-xs z-20">
+            <span class="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
+              <i data-lucide="chevrons-right" class="w-3.5 h-3.5 text-accent-cyan"></i>
+              <span>HORIZONTAL PROGRESS</span>
+            </span>
+            <div class="w-36 h-1.5 bg-dark-950 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-accent-600 to-accent-cyan rail-fill w-0"></div>
+            </div>
+            <span class="font-mono text-accent-cyan font-bold rail-pct">0%</span>
+          </div>
+        </div>
+      `;
+
+      const stage = container.querySelector('.h-rail-stage');
+      const track = container.querySelector('.rail-track');
+      const fill = container.querySelector('.rail-fill');
+      const pctEl = container.querySelector('.rail-pct');
+
+      let railProgress = 0;
+
+      function applyRail(p) {
+        railProgress = Math.max(0, Math.min(1, p));
+        pctEl.innerText = `${Math.round(railProgress * 100)}%`;
+        fill.style.width = `${railProgress * 100}%`;
+        // 4 panels: moves by -75% total
+        track.style.transform = `translateX(${-railProgress * 75}%)`;
+      }
+
+      activeScrubHandler = applyRail;
+
+      function onWheel(e) {
+        e.preventDefault();
+        railProgress += e.deltaY * 0.0012;
+        railProgress = Math.max(0, Math.min(1, railProgress));
+        applyRail(railProgress);
+        updateScrubberUIOnly(railProgress);
+      }
+      stage.addEventListener('wheel', onWheel, { passive: false });
+
+      // Swipe support
+      let startX = 0;
+      stage.addEventListener('pointerdown', (e) => {
+        startX = e.clientX;
+        stage.setPointerCapture(e.pointerId);
+      });
+      stage.addEventListener('pointermove', (e) => {
+        if (!e.buttons) return;
+        const dx = startX - e.clientX;
+        startX = e.clientX;
+        railProgress += dx * 0.003;
+        railProgress = Math.max(0, Math.min(1, railProgress));
+        applyRail(railProgress);
+        updateScrubberUIOnly(railProgress);
+      });
+
+      function snapToSection(index) {
+        const dest = (index / 3);
+        const pStart = railProgress;
+        const dur = STATE.duration / timeScale;
+        let t0 = null;
+        function step(now) {
+          if (!t0) t0 = now;
+          const p = Math.min((now - t0) / dur, 1);
+          const cur = pStart + (dest - pStart) * evaluateCubicBezier(p);
+          applyRail(cur);
+          updateScrubberUIOnly(cur);
+          if (p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
+
+      container.querySelector('.rail-btn-1').onclick = () => snapToSection(0);
+      container.querySelector('.rail-btn-2').onclick = () => snapToSection(1);
+      container.querySelector('.rail-btn-3').onclick = () => snapToSection(2);
+      container.querySelector('.rail-btn-4').onclick = () => snapToSection(3);
+
+      registerCleanup(() => stage.removeEventListener('wheel', onWheel));
+      applyRail(0);
+      return () => snapToSection(railProgress > 0.6 ? 0 : 3);
+    }
+
+    function getExportScrollHorizontalRail(fmt, s) {
+      return `/* Horizontal Track Scroll Pinning */
+window.addEventListener('scroll', () => {
+  const pinSection = document.getElementById('pin-section');
+  const scrollOffset = window.scrollY - pinSection.offsetTop;
+  const maxScroll = pinSection.offsetHeight - window.innerHeight;
+  const progress = Math.min(Math.max(scrollOffset / maxScroll, 0), 1);
+
+  // 세로 스크롤을 가로 트랙으로 1:1 매핑
+  track.style.transform = \`translateX(-\${progress * (track.scrollWidth - window.innerWidth)}px)\`;
+});`;
+    }
+
+    // 3-6. CINEMATIC MASK & ZOOM PENETRATION
+    function renderScrollMaskZoom(container) {
+      container.innerHTML = `
+        <div class="zoom-mask-stage relative w-full h-full flex flex-col justify-between p-3 select-none touch-none-drag overflow-hidden">
+          <!-- Header Bar -->
+          <div class="flex items-center justify-between gap-2 z-30">
+            <div class="flex items-center gap-1.5 text-xs text-white font-semibold">
+              <i data-lucide="scan" class="w-4 h-4 text-pink-400"></i>
+              <span>시네마틱 줌 마스크 관통 (Mask Zoom)</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button class="zoom-btn-1 px-2 py-0.5 rounded bg-dark-800 text-[10px] font-mono text-slate-300 border border-white/10">1x 외곽</button>
+              <button class="zoom-btn-2 px-2 py-0.5 rounded bg-dark-800 text-[10px] font-mono text-slate-300 border border-white/10">15x 관통</button>
+              <button class="zoom-btn-3 px-2 py-0.5 rounded bg-dark-800 text-[10px] font-mono text-slate-300 border border-white/10">45x 내부</button>
+            </div>
+          </div>
+
+          <!-- Mask Penetration Arena -->
+          <div class="relative flex-1 w-full my-2 rounded-2xl overflow-hidden bg-black flex items-center justify-center">
+            <!-- Hidden Underlying Target World (Revealed through mask zoom) -->
+            <div class="under-world absolute inset-0 bg-gradient-to-tr from-indigo-900 via-purple-900 to-pink-700 flex flex-col items-center justify-center p-6 text-center z-10">
+              <div class="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md flex items-center justify-center mb-3 shadow-2xl">
+                <i data-lucide="zap" class="w-8 h-8 text-amber-300 animate-bounce"></i>
+              </div>
+              <h2 class="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight">NEW DIMENSION UNLOCKED</h2>
+              <p class="text-xs sm:text-sm text-pink-100 max-w-xs mt-1">마스크 렌즈 구멍을 완전히 통과하여 숨겨진 새로운 인터랙티브 월드에 도달했습니다.</p>
+              <button class="mt-4 px-5 py-2 rounded-xl bg-white text-dark-950 font-bold text-xs shadow-xl active:scale-95 transition">
+                스페이스 탐험 시작 &rarr;
+              </button>
+            </div>
+
+            <!-- Foreground Layer with Aperture Cutout Hole -->
+            <div class="mask-layer absolute inset-0 bg-dark-950 z-20 flex flex-col items-center justify-center pointer-events-none transition-transform duration-75">
+              <h1 class="mask-title font-display font-black text-3xl sm:text-5xl text-white tracking-widest transition-opacity duration-150">
+                EXPLORE
+              </h1>
+              <!-- The Circle Cutout Portal -->
+              <div class="mask-hole w-20 h-20 rounded-full border-2 border-pink-500/80 my-2 transition-transform duration-75 flex items-center justify-center" style="box-shadow: 0 0 40px rgba(236,72,153,0.6);">
+                <span class="text-[9px] font-mono text-pink-300 font-bold">PORTAL</span>
+              </div>
+              <p class="mask-sub text-xs text-slate-400 font-mono tracking-wider transition-opacity duration-150">
+                SCROLL TO DIVE IN
+              </p>
+            </div>
+          </div>
+
+          <!-- Bottom Zoom Indicator -->
+          <div class="w-full bg-dark-900/90 rounded-xl px-3 py-2 border border-white/10 flex items-center justify-between text-xs z-30">
+            <span class="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
+              <i data-lucide="maximize" class="w-3.5 h-3.5 text-pink-400"></i>
+              <span>ZOOM MAGNIFICATION</span>
+            </span>
+            <span class="font-mono text-pink-400 font-bold zoom-factor-label">1.0x (0%)</span>
+          </div>
+        </div>
+      `;
+
+      const stage = container.querySelector('.zoom-mask-stage');
+      const maskLayer = container.querySelector('.mask-layer');
+      const maskHole = container.querySelector('.mask-hole');
+      const maskTitle = container.querySelector('.mask-title');
+      const maskSub = container.querySelector('.mask-sub');
+      const zoomLabel = container.querySelector('.zoom-factor-label');
+
+      let zoomProg = 0;
+
+      function applyZoom(p) {
+        zoomProg = Math.max(0, Math.min(1, p));
+        const scale = 1 + Math.pow(zoomProg, 2.2) * 44; // 1x -> 45x
+        zoomLabel.innerText = `${scale.toFixed(1)}x (${Math.round(zoomProg * 100)}%)`;
+
+        maskHole.style.transform = `scale(${scale})`;
+        
+        // As you zoom in, text dissolves away
+        if (zoomProg > 0.15) {
+          const fade = Math.max(0, 1 - (zoomProg - 0.15) / 0.35);
+          maskTitle.style.opacity = `${fade}`;
+          maskSub.style.opacity = `${fade}`;
+        } else {
+          maskTitle.style.opacity = '1';
+          maskSub.style.opacity = '1';
+        }
+
+        // When zoom exceeds 0.65, you fully penetrate
+        if (zoomProg > 0.65) {
+          const layerFade = Math.max(0, 1 - (zoomProg - 0.65) / 0.3);
+          maskLayer.style.opacity = `${layerFade}`;
+        } else {
+          maskLayer.style.opacity = '1';
+        }
+      }
+
+      activeScrubHandler = applyZoom;
+
+      function onWheel(e) {
+        e.preventDefault();
+        zoomProg += e.deltaY * 0.0012;
+        zoomProg = Math.max(0, Math.min(1, zoomProg));
+        applyZoom(zoomProg);
+        updateScrubberUIOnly(zoomProg);
+      }
+      stage.addEventListener('wheel', onWheel, { passive: false });
+
+      // Touch drag
+      let startY = 0;
+      stage.addEventListener('pointerdown', (e) => {
+        startY = e.clientY;
+        stage.setPointerCapture(e.pointerId);
+      });
+      stage.addEventListener('pointermove', (e) => {
+        if (!e.buttons) return;
+        const dy = startY - e.clientY;
+        startY = e.clientY;
+        zoomProg += dy * 0.005;
+        zoomProg = Math.max(0, Math.min(1, zoomProg));
+        applyZoom(zoomProg);
+        updateScrubberUIOnly(zoomProg);
+      });
+
+      function snapZoom(dest) {
+        const pStart = zoomProg;
+        const dur = STATE.duration / timeScale;
+        let t0 = null;
+        function step(now) {
+          if (!t0) t0 = now;
+          const p = Math.min((now - t0) / dur, 1);
+          const cur = pStart + (dest - pStart) * evaluateCubicBezier(p);
+          applyZoom(cur);
+          updateScrubberUIOnly(cur);
+          if (p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
+
+      container.querySelector('.zoom-btn-1').onclick = () => snapZoom(0);
+      container.querySelector('.zoom-btn-2').onclick = () => snapZoom(0.48);
+      container.querySelector('.zoom-btn-3').onclick = () => snapZoom(1.0);
+
+      registerCleanup(() => stage.removeEventListener('wheel', onWheel));
+      applyZoom(0);
+      return () => snapZoom(zoomProg > 0.6 ? 0 : 1);
+    }
+
+    function getExportScrollMaskZoom(fmt, s) {
+      return `/* Cinematic Mask Zoom Penetration */
+window.addEventListener('scroll', () => {
+  const p = window.scrollY / (window.innerHeight * 2);
+  const scale = 1 + Math.pow(p, 2.5) * 45;
+  maskCircle.style.transform = \`scale(\${scale})\`;
+  if (p > 0.6) {
+    foregroundLayer.style.opacity = \`\${1 - (p - 0.6) / 0.4}\`;
+  }
+});`;
+    }
+
+    // 3-7. FULLPAGE SMOOTH MAGNETIC SNAP
+    function renderScrollFullpageSnap(container) {
+      container.innerHTML = `
+        <div class="fullpage-stage relative w-full h-full flex flex-col justify-between p-3 select-none touch-none-drag overflow-hidden">
+          <!-- Slide Container -->
+          <div class="relative flex-1 w-full rounded-2xl overflow-hidden border border-white/10 my-1 bg-dark-950">
+            <!-- Slides Track -->
+            <div class="fp-track w-full h-full relative transition-transform duration-500 ease-out">
+              <!-- Slide 0 -->
+              <div class="fp-slide absolute inset-0 p-6 flex flex-col justify-between bg-gradient-to-br from-indigo-950 to-dark-900" style="top: 0%;">
+                <div class="flex justify-between items-center text-xs font-mono text-indigo-400">
+                  <span class="font-bold">SLIDE 01</span>
+                  <span>100VH SNAP</span>
+                </div>
+                <div class="my-auto">
+                  <h2 class="text-xl sm:text-3xl font-extrabold text-white">원스크롤 자석 스냅</h2>
+                  <p class="text-xs sm:text-sm text-indigo-200/80 mt-2 max-w-sm">
+                    휠을 살짝만 튕겨도 화면이 어정쩡하게 걸치지 않고 다음 섹션으로 착 달라붙습니다.
+                  </p>
+                </div>
+                <div class="text-[10px] font-mono text-slate-500 flex items-center gap-1">
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-indigo-400 animate-bounce"></i> 아래로 스크롤하여 스냅
+                </div>
+              </div>
+
+              <!-- Slide 1 -->
+              <div class="fp-slide absolute inset-0 p-6 flex flex-col justify-between bg-gradient-to-br from-cyan-950 to-dark-900" style="top: 100%;">
+                <div class="flex justify-between items-center text-xs font-mono text-cyan-400">
+                  <span class="font-bold">SLIDE 02</span>
+                  <span>FLUID EASING</span>
+                </div>
+                <div class="my-auto">
+                  <h2 class="text-xl sm:text-3xl font-extrabold text-white">스마트 모멘텀 록</h2>
+                  <p class="text-xs sm:text-sm text-cyan-200/80 mt-2 max-w-sm">
+                    전환 중에는 중복 휠 입력이 억제되어 섹션을 건너뛰는 멀미 현상을 방지합니다.
+                  </p>
+                </div>
+                <div class="text-[10px] font-mono text-slate-500">SECTION 2 READY</div>
+              </div>
+
+              <!-- Slide 2 -->
+              <div class="fp-slide absolute inset-0 p-6 flex flex-col justify-between bg-gradient-to-br from-purple-950 to-dark-900" style="top: 200%;">
+                <div class="flex justify-between items-center text-xs font-mono text-pink-400">
+                  <span class="font-bold">SLIDE 03</span>
+                  <span>FINAL DESTINATION</span>
+                </div>
+                <div class="my-auto">
+                  <h2 class="text-xl sm:text-3xl font-extrabold text-white">프로덕션 레디</h2>
+                  <p class="text-xs sm:text-sm text-pink-200/80 mt-2 max-w-sm">
+                    CSS scroll-snap과 순수 JS 모멘텀 엔진 두 가지 방식을 모두 호환합니다.
+                  </p>
+                </div>
+                <div class="text-[10px] font-mono text-slate-500">COMPLETED &check;</div>
+              </div>
+            </div>
+
+            <!-- Magnetic Pagination Dots (Right) -->
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2.5 z-20">
+              <button class="dot-btn-0 w-3 h-3 rounded-full bg-white transition-all scale-125 ring-2 ring-indigo-400"></button>
+              <button class="dot-btn-1 w-3 h-3 rounded-full bg-slate-600 hover:bg-slate-400 transition-all"></button>
+              <button class="dot-btn-2 w-3 h-3 rounded-full bg-slate-600 hover:bg-slate-400 transition-all"></button>
+            </div>
+          </div>
+
+          <!-- Bottom Control Bar -->
+          <div class="w-full bg-dark-900/90 rounded-xl px-3 py-2 border border-white/10 flex items-center justify-between text-xs z-20">
+            <span class="text-[11px] text-slate-400 flex items-center gap-1.5">
+              <i data-lucide="compass" class="w-3.5 h-3.5 text-accent-cyan"></i>
+              <span>휠/스와이프로 1섹션씩 자석 스냅 안착</span>
+            </span>
+            <div class="flex items-center gap-1">
+              <button class="prev-snap-btn px-2 py-0.5 rounded bg-dark-800 text-slate-300 hover:text-white">&uarr; 이전</button>
+              <button class="next-snap-btn px-2 py-0.5 rounded bg-accent-600 text-white font-semibold">&darr; 다음</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const stage = container.querySelector('.fullpage-stage');
+      const track = container.querySelector('.fp-track');
+      const dots = [
+        container.querySelector('.dot-btn-0'),
+        container.querySelector('.dot-btn-1'),
+        container.querySelector('.dot-btn-2')
+      ];
+
+      let currentSlide = 0;
+      let isTransitioning = false;
+
+      function goToSlide(idx) {
+        if (idx < 0 || idx > 2) return;
+        currentSlide = idx;
+        isTransitioning = true;
+        track.style.transition = `transform ${STATE.duration / timeScale}ms ${getBezierCSS()}`;
+        track.style.transform = `translateY(${-currentSlide * 100}%)`;
+
+        dots.forEach((dot, i) => {
+          if (i === currentSlide) {
+            dot.className = 'w-3 h-3 rounded-full bg-white transition-all scale-125 ring-2 ring-indigo-400';
+          } else {
+            dot.className = 'w-3 h-3 rounded-full bg-slate-600 hover:bg-slate-400 transition-all';
+          }
+        });
+
+        updateScrubberUIOnly(currentSlide / 2);
+
+        setTimeout(() => {
+          isTransitioning = false;
+        }, (STATE.duration * 0.7) / timeScale);
+      }
+
+      activeScrubHandler = (p) => {
+        const target = Math.round(p * 2);
+        if (target !== currentSlide) goToSlide(target);
+      };
+
+      function onWheel(e) {
+        e.preventDefault();
+        if (isTransitioning) return;
+        if (e.deltaY > 25) goToSlide(currentSlide + 1);
+        else if (e.deltaY < -25) goToSlide(currentSlide - 1);
+      }
+      stage.addEventListener('wheel', onWheel, { passive: false });
+
+      // Swipe
+      let startY = 0;
+      stage.addEventListener('pointerdown', (e) => {
+        startY = e.clientY;
+        stage.setPointerCapture(e.pointerId);
+      });
+      stage.addEventListener('pointerup', (e) => {
+        const dy = startY - e.clientY;
+        if (Math.abs(dy) > 35 && !isTransitioning) {
+          if (dy > 0) goToSlide(currentSlide + 1);
+          else goToSlide(currentSlide - 1);
+        }
+      });
+
+      dots.forEach((btn, i) => { btn.onclick = () => goToSlide(i); });
+      container.querySelector('.prev-snap-btn').onclick = () => goToSlide(currentSlide - 1);
+      container.querySelector('.next-snap-btn').onclick = () => goToSlide(currentSlide + 1);
+
+      registerCleanup(() => stage.removeEventListener('wheel', onWheel));
+      goToSlide(0);
+      return () => goToSlide((currentSlide + 1) % 3);
+    }
+
+    function getExportScrollFullpageSnap(fmt, s) {
+      return `/* Pure CSS Scroll Snap */
+.container {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+  height: 100vh;
+}
+.section {
+  scroll-snap-align: start;
+  height: 100vh;
+}
+/* JS Smooth Controller */
+function snapTo(index) {
+  window.scrollTo({
+    top: index * window.innerHeight,
+    behavior: 'smooth'
+  });
+}`;
+    }
+
+    // 4-1. SPRING TOSS & BOUNDS
     function renderSpringToss(container) {
       container.innerHTML = `
-        <div class="toss-arena touch-none-drag relative w-full max-w-sm h-56 rounded-2xl bg-dark-950 border border-white/10 overflow-hidden flex items-center justify-center">
-          <div class="toss-box w-16 h-16 rounded-2xl bg-gradient-to-tr from-accent-cyan to-indigo-600 shadow-xl flex items-center justify-center font-bold text-white text-xs cursor-grab active:cursor-grabbing select-none absolute">
-            잡고 던지기
+        <div class="toss-arena touch-none-drag relative w-full max-w-md h-64 rounded-2xl bg-dark-950 border border-white/10 overflow-hidden select-none flex items-center justify-center">
+          <div class="text-[11px] font-mono text-slate-500 absolute top-3 left-3 pointer-events-none">
+            DRAG & TOSS WITH MOMENTUM
+          </div>
+          <div class="toss-box absolute w-14 h-14 rounded-2xl bg-gradient-to-tr from-accent-cyan via-indigo-500 to-accent-pink shadow-xl cursor-grab active:cursor-grabbing flex items-center justify-center text-white font-bold text-xs select-none">
+            <i data-lucide="move" class="w-5 h-5 pointer-events-none"></i>
           </div>
         </div>
       `;
       const arena = container.querySelector('.toss-arena');
       const box = container.querySelector('.toss-box');
 
+      let x = 120, y = 80;
+      let vx = 0, vy = 0;
+      let lastX = 0, lastY = 0;
       let isDragging = false;
-      let startX = 0, startY = 0, lastX = 0, lastY = 0;
-      let vx = 0, vy = 0, posX = 0, posY = 0;
-      let tossRaf = null;
+      let animId = null;
 
-      function simulatePhysics() {
-        cancelAnimationFrame(tossRaf);
-        function step() {
-          posX += vx * timeScale;
-          posY += vy * timeScale;
+      function updatePhysics() {
+        if (!isDragging) {
+          x += vx;
+          y += vy;
           vx *= 0.95;
           vy *= 0.95;
 
-          const maxX = (arena.clientWidth / 2) - 36;
-          const maxY = (arena.clientHeight / 2) - 36;
+          const arenaW = arena.clientWidth;
+          const arenaH = arena.clientHeight;
+          const boxSize = box.clientWidth || 56;
 
-          if (posX > maxX || posX < -maxX) {
-            vx *= -0.78;
-            posX = Math.max(-maxX, Math.min(maxX, posX));
-            playTone(780, 0.02);
-          }
-          if (posY > maxY || posY < -maxY) {
-            vy *= -0.78;
-            posY = Math.max(-maxY, Math.min(maxY, posY));
-            playTone(780, 0.02);
+          // Wall Bounces with damping
+          if (x <= 0) {
+            x = 0;
+            vx = -vx * 0.75;
+            playTone(400, 0.02, 'sine', 0.015);
+          } else if (x >= arenaW - boxSize) {
+            x = arenaW - boxSize;
+            vx = -vx * 0.75;
+            playTone(400, 0.02, 'sine', 0.015);
           }
 
-          box.style.transform = `translate(${posX}px, ${posY}px)`;
-          if (Math.hypot(vx, vy) > 0.15) {
-            tossRaf = requestAnimationFrame(step);
+          if (y <= 0) {
+            y = 0;
+            vy = -vy * 0.75;
+            playTone(400, 0.02, 'sine', 0.015);
+          } else if (y >= arenaH - boxSize) {
+            y = arenaH - boxSize;
+            vy = -vy * 0.75;
+            playTone(400, 0.02, 'sine', 0.015);
           }
         }
-        tossRaf = requestAnimationFrame(step);
+
+        box.style.transform = `translate(${x}px, ${y}px)`;
+        animId = requestAnimationFrame(updatePhysics);
       }
 
-      box.addEventListener('pointerdown', (e) => {
+      function onPointerDown(e) {
         isDragging = true;
-        cancelAnimationFrame(tossRaf);
-        startX = e.clientX - posX;
-        startY = e.clientY - posY;
+        const rect = arena.getBoundingClientRect();
         lastX = e.clientX;
         lastY = e.clientY;
         box.setPointerCapture(e.pointerId);
-      });
+      }
 
-      box.addEventListener('pointermove', (e) => {
+      function onPointerMove(e) {
         if (!isDragging) return;
-        posX = e.clientX - startX;
-        posY = e.clientY - startY;
-        vx = (e.clientX - lastX) * 0.8;
-        vy = (e.clientY - lastY) * 0.8;
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
         lastX = e.clientX;
         lastY = e.clientY;
-        box.style.transform = `translate(${posX}px, ${posY}px)`;
-      });
 
-      box.addEventListener('pointerup', (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        box.releasePointerCapture(e.pointerId);
-        simulatePhysics();
-      });
+        x += dx;
+        y += dy;
+        vx = dx * 1.25;
+        vy = dy * 1.25;
+      }
 
-      registerCleanup(() => cancelAnimationFrame(tossRaf));
+      function onPointerUp(e) {
+        if (isDragging) {
+          isDragging = false;
+          box.releasePointerCapture(e.pointerId);
+          playTone(700, 0.03);
+        }
+      }
+
+      box.addEventListener('pointerdown', onPointerDown);
+      box.addEventListener('pointermove', onPointerMove);
+      box.addEventListener('pointerup', onPointerUp);
+
+      animId = requestAnimationFrame(updatePhysics);
+
+      registerCleanup(() => {
+        if (animId) cancelAnimationFrame(animId);
+      });
 
       return () => {
-        vx = (Math.random() > 0.5 ? 1 : -1) * 14;
-        vy = -12;
-        simulatePhysics();
+        vx = (Math.random() - 0.5) * 35;
+        vy = -18 - Math.random() * 12;
       };
     }
 
     function getExportSpringToss() {
-      return `box.addEventListener('pointerdown', e => box.setPointerCapture(e.pointerId));
-box.addEventListener('pointerup', () => {
-  function loop() {
-    posX += vx; posY += vy;
-    vx *= 0.95; vy *= 0.95;
-    if (Math.abs(posX) > boundX) vx *= -0.78;
-    box.style.transform = \`translate(\${posX}px, \${posY}px)\`;
-    if (Math.hypot(vx, vy) > 0.15) requestAnimationFrame(loop);
-  }
-  loop();
-});`;
+      return `/* Velocity & Wall Bouncing */
+function stepPhysics() {
+  x += vx; y += vy;
+  vx *= 0.95; vy *= 0.95; // Friction
+  if (x <= 0 || x >= maxX) vx = -vx * bounceFactor;
+  if (y <= 0 || y >= maxY) vy = -vy * bounceFactor;
+  box.style.transform = \`translate(\${x}px, \${y}px)\`;
+  requestAnimationFrame(stepPhysics);
+}`;
     }
 
-    // 4-2. MAGNETIC ORB (Touch + Mouse)
+    // 4-2. MAGNETIC BUTTON
     function renderMagneticOrb(container) {
       container.innerHTML = `
-        <div class="mag-zone touch-none-drag w-64 h-44 flex flex-col items-center justify-center">
-          <button class="mag-btn px-7 py-4 rounded-full bg-gradient-to-r from-accent-600 to-indigo-500 text-white font-semibold text-xs shadow-xl shadow-accent-600/30 transition-transform duration-150 ease-out flex items-center gap-2">
-            <span>마그네틱 자석 버튼</span>
-            <i data-lucide="magnet" class="w-4 h-4"></i>
+        <div class="mag-wrapper touch-none-drag relative w-full max-w-sm h-60 rounded-2xl bg-dark-950 border border-white/10 flex items-center justify-center overflow-hidden cursor-crosshair">
+          <div class="mag-aura absolute w-36 h-36 rounded-full bg-accent-600/10 blur-xl pointer-events-none transition-transform duration-200"></div>
+          <button class="mag-btn relative px-7 py-3.5 rounded-2xl bg-gradient-to-r from-accent-600 to-indigo-600 text-white font-bold text-xs shadow-xl shadow-indigo-500/25 flex items-center gap-2 pointer-events-none transition-transform duration-100 ease-out">
+            <i data-lucide="magnet" class="w-4 h-4 text-cyan-300"></i>
+            <span>인력 마그네틱 버튼</span>
           </button>
-          <span class="text-xs text-slate-400 mt-4">주변을 터치하거나 마우스를 움직여보세요</span>
         </div>
       `;
-      const zone = container.querySelector('.mag-zone');
+      const wrapper = container.querySelector('.mag-wrapper');
       const btn = container.querySelector('.mag-btn');
+      const aura = container.querySelector('.mag-aura');
 
-      zone.addEventListener('pointermove', (e) => {
-        const rect = btn.getBoundingClientRect();
-        const x = (e.clientX - (rect.left + rect.width / 2)) * 0.4;
-        const y = (e.clientY - (rect.top + rect.height / 2)) * 0.4;
-        btn.style.transform = `translate(${x}px, ${y}px)`;
-      });
-      zone.addEventListener('pointerleave', () => {
-        btn.style.transform = 'translate(0px, 0px)';
-      });
+      function onMove(e) {
+        const rect = wrapper.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const dx = e.clientX - centerX;
+        const dy = e.clientY - centerY;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < 130) {
+          const power = 1 - (dist / 130);
+          const pullX = dx * 0.45 * power;
+          const pullY = dy * 0.45 * power;
+          btn.style.transform = `translate(${pullX}px, ${pullY}px) scale(1.08)`;
+          aura.style.transform = `translate(${pullX * 0.6}px, ${pullY * 0.6}px)`;
+        } else {
+          btn.style.transform = 'translate(0, 0) scale(1)';
+          aura.style.transform = 'translate(0, 0)';
+        }
+      }
+
+      function onLeave() {
+        btn.style.transform = 'translate(0, 0) scale(1)';
+        aura.style.transform = 'translate(0, 0)';
+      }
+
+      wrapper.addEventListener('pointermove', onMove);
+      wrapper.addEventListener('pointerleave', onLeave);
 
       return () => {
         btn.animate([
-          { transform: 'translate(0, 0)' },
-          { transform: 'translate(18px, -14px) scale(1.06)' },
-          { transform: 'translate(-12px, 10px)' },
-          { transform: 'translate(0, 0)' }
+          { transform: 'translate(25px, -15px) scale(1.1)' },
+          { transform: 'translate(-25px, 15px) scale(1.1)' },
+          { transform: 'translate(0, 0) scale(1)' }
         ], { duration: STATE.duration / timeScale, easing: getBezierCSS() });
       };
     }
 
     function getExportMagneticOrb() {
-      return `btn.addEventListener('pointermove', (e) => {
-  const rect = btn.getBoundingClientRect();
-  const x = (e.clientX - (rect.left + rect.width / 2)) * 0.4;
-  const y = (e.clientY - (rect.top + rect.height / 2)) * 0.4;
-  btn.style.transform = \`translate(\${x}px, \${y}px)\`;
+      return `wrapper.addEventListener('pointermove', (e) => {
+  const dx = e.clientX - centerX;
+  const dy = e.clientY - centerY;
+  const dist = Math.hypot(dx, dy);
+  if (dist < maxRadius) {
+    const strength = (1 - dist / maxRadius) * 0.4;
+    btn.style.transform = \`translate(\${dx * strength}px, \${dy * strength}px)\`;
+  }
 });`;
     }
 
-    // 4-3. 3D TILT SPECULAR (Touch + Mouse)
+    // 4-3. 3D TILT SPECULAR
     function renderTiltSpecular(container) {
       container.innerHTML = `
-        <div class="tilt-card touch-none-drag w-64 h-40 rounded-2xl bg-gradient-to-tr from-dark-850 via-dark-800 to-indigo-950/60 border border-white/20 p-5 shadow-2xl relative overflow-hidden transition-transform duration-150 ease-out cursor-pointer flex flex-col justify-between">
-          <div class="tilt-light absolute -inset-full bg-gradient-to-tr from-white/0 via-white/15 to-transparent pointer-events-none"></div>
-          <div class="flex justify-between items-start text-white">
-            <i data-lucide="sparkles" class="w-5 h-5 text-accent-cyan"></i>
-            <span class="text-[10px] font-mono text-indigo-300">TOUCH 3D TILT</span>
-          </div>
-          <div>
-            <div class="text-xs font-mono font-bold text-white tracking-widest">MOTION LAB PRO</div>
-            <div class="text-[11px] text-slate-400 mt-0.5">표면을 문질러 각도를 조절하세요</div>
+        <div class="tilt-container touch-none-drag perspective-1000 w-full max-w-sm h-60 flex items-center justify-center">
+          <div class="tilt-card preserve-3d relative w-64 h-40 rounded-2xl bg-gradient-to-tr from-dark-900 via-dark-850 to-slate-900 border border-white/15 p-5 shadow-2xl overflow-hidden cursor-pointer transition-transform duration-100 ease-out flex flex-col justify-between">
+            <div class="tilt-glare absolute -inset-full bg-gradient-to-tr from-transparent via-white/15 to-transparent pointer-events-none transform -translate-x-full transition-transform duration-100"></div>
+            <div class="flex justify-between items-center text-xs font-mono text-slate-400">
+              <span class="text-indigo-400 font-bold">3D SPECULAR</span>
+              <i data-lucide="credit-card" class="w-4 h-4 text-white"></i>
+            </div>
+            <div>
+              <div class="text-sm font-bold text-white tracking-wide">INTERACTIVE GLASS</div>
+              <div class="text-[10px] text-slate-400 font-mono mt-0.5">Tilt & Specular Reflection</div>
+            </div>
+            <div class="text-[10px] font-mono text-cyan-400 flex justify-between border-t border-white/5 pt-2">
+              <span>HOLO CHIP</span>
+              <span>12/28</span>
+            </div>
           </div>
         </div>
       `;
+      const wrapper = container.querySelector('.tilt-container');
       const card = container.querySelector('.tilt-card');
-      const light = container.querySelector('.tilt-light');
+      const glare = container.querySelector('.tilt-glare');
 
-      card.addEventListener('pointermove', (e) => {
+      function onMove(e) {
         const rect = card.getBoundingClientRect();
-        const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
-        const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
-        card.style.transform = `perspective(800px) rotateX(${y * -20}deg) rotateY(${x * 20}deg) scale(1.04)`;
-        light.style.transform = `translate(${x * 55}px, ${y * 55}px)`;
-      });
-      card.addEventListener('pointerleave', () => {
-        card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) scale(1)';
-      });
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+
+        const rotX = -y * 36;
+        const rotY = x * 36;
+
+        card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.05)`;
+        glare.style.transform = `translate(${x * 120}%, ${y * 120}%) rotate(25deg)`;
+      }
+
+      function onLeave() {
+        card.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
+        glare.style.transform = 'translateX(-100%)';
+      }
+
+      wrapper.addEventListener('pointermove', onMove);
+      wrapper.addEventListener('pointerleave', onLeave);
 
       return () => {
         card.animate([
-          { transform: 'perspective(800px) rotateX(0deg) rotateY(0deg)' },
-          { transform: 'perspective(800px) rotateX(15deg) rotateY(-18deg) scale(1.05)' },
-          { transform: 'perspective(800px) rotateX(-12deg) rotateY(18deg) scale(1.05)' },
-          { transform: 'perspective(800px) rotateX(0deg) rotateY(0deg)' }
+          { transform: 'rotateX(20deg) rotateY(-20deg) scale(1.05)' },
+          { transform: 'rotateX(-20deg) rotateY(20deg) scale(1.05)' },
+          { transform: 'rotateX(0deg) rotateY(0deg) scale(1)' }
         ], { duration: STATE.duration / timeScale, easing: getBezierCSS() });
       };
     }
 
     function getExportTiltSpecular() {
       return `card.addEventListener('pointermove', (e) => {
-  const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
-  const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
-  card.style.transform = \`perspective(800px) rotateX(\${y * -20}deg) rotateY(\${x * 20}deg)\`;
+  const x = (e.clientX - rect.left) / rect.width - 0.5;
+  const y = (e.clientY - rect.top) / rect.height - 0.5;
+  card.style.transform = \`rotateX(\${-y * 30}deg) rotateY(\${x * 30}deg)\`;
 });`;
     }
 
     // 5-1. SVG LINE DRAWING
     function renderSvgLineDraw(container) {
       container.innerHTML = `
-        <div class="flex flex-col items-center justify-center">
-          <svg class="w-32 h-32 text-indigo-400" viewBox="0 0 100 100">
-            <path class="draw-path" pathLength="100" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="100" stroke-dashoffset="100" d="M22 52 L42 72 L78 30 M50 10 A40 40 0 1 0 50 90 A40 40 0 1 0 50 10" />
+        <div class="flex flex-col items-center justify-center p-4">
+          <svg class="w-36 h-36" viewBox="0 0 100 100" fill="none">
+            <path class="draw-path" d="M10 50 C20 15, 40 15, 50 50 C60 85, 80 85, 90 50 C95 30, 85 10, 50 10 C15 10, 5 40, 20 70 C35 95, 75 95, 88 75" 
+              stroke="#6366f1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
-          <span class="text-xs text-slate-400 mt-3">SVG pathLength="100" 드로잉</span>
+          <span class="text-xs text-slate-400 mt-2 font-mono">stroke-dashoffset 라인 드로잉</span>
         </div>
       `;
       const path = container.querySelector('.draw-path');
+      const length = path.getTotalLength();
+      path.style.strokeDasharray = length;
+      path.style.strokeDashoffset = length;
 
       function trigger() {
         path.style.transition = 'none';
-        path.style.strokeDashoffset = '100';
+        path.style.strokeDashoffset = length;
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            path.style.transition = `stroke-dashoffset ${STATE.duration / timeScale}ms ${getBezierCSS()}`;
-            path.style.strokeDashoffset = '0';
-          });
+          path.style.transition = `stroke-dashoffset ${STATE.duration / timeScale}ms ${getBezierCSS()}`;
+          path.style.strokeDashoffset = '0';
         });
       }
 
       activeScrubHandler = (p) => {
         path.style.transition = 'none';
-        path.style.strokeDashoffset = `${100 - p * 100}`;
+        path.style.strokeDashoffset = `${length * (1 - p)}`;
       };
 
       trigger();
@@ -2537,190 +3607,225 @@ box.addEventListener('pointerup', () => {
     }
 
     function getExportSvgLineDraw(fmt, s) {
-      return `<path pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" class="draw" />
-.draw {
+      return `/* SVG Path Dashoffset */
+.path {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
   transition: stroke-dashoffset ${s.duration}ms ${getBezierCSS()};
-  stroke-dashoffset: 0;
-}`;
+}
+.draw-active { stroke-dashoffset: 0; }`;
     }
 
     // 5-2. SVG HAMBURGER TO X
     function renderSvgHamburger(container) {
       container.innerHTML = `
-        <div class="flex flex-col items-center justify-center">
-          <button class="hamb-btn w-16 h-16 rounded-2xl bg-dark-900 border border-white/10 flex flex-col items-center justify-center gap-1.5 shadow-xl">
-            <span class="bar-top w-7 h-0.5 bg-white rounded-full transition-all"></span>
-            <span class="bar-mid w-7 h-0.5 bg-white rounded-full transition-all"></span>
-            <span class="bar-bot w-7 h-0.5 bg-white rounded-full transition-all"></span>
+        <div class="flex flex-col items-center justify-center p-4">
+          <button class="burger-btn w-16 h-16 rounded-2xl bg-dark-900 border border-white/10 flex flex-col items-center justify-center gap-2 p-3.5 hover:border-accent-500 transition">
+            <span class="line-1 w-8 h-1 bg-white rounded-full transition-all duration-300"></span>
+            <span class="line-2 w-8 h-1 bg-white rounded-full transition-all duration-300"></span>
+            <span class="line-3 w-8 h-1 bg-white rounded-full transition-all duration-300"></span>
           </button>
-          <span class="text-xs text-slate-400 mt-3">터치하여 아이콘 패스 모핑</span>
+          <span class="text-xs text-slate-400 mt-3">클릭하여 햄버거 &harr; 닫기(X) 모핑</span>
         </div>
       `;
-      const btn = container.querySelector('.hamb-btn');
-      const top = container.querySelector('.bar-top');
-      const mid = container.querySelector('.bar-mid');
-      const bot = container.querySelector('.bar-bot');
+      const btn = container.querySelector('.burger-btn');
+      const l1 = container.querySelector('.line-1');
+      const l2 = container.querySelector('.line-2');
+      const l3 = container.querySelector('.line-3');
       let open = false;
 
       function toggle() {
         open = !open;
         const dur = `${STATE.duration / timeScale}ms`;
-        const ease = getBezierCSS();
-        [top, mid, bot].forEach(b => { b.style.transitionDuration = dur; b.style.transitionTimingFunction = ease; });
-        top.style.transform = open ? 'translateY(8px) rotate(45deg)' : 'none';
-        mid.style.opacity = open ? '0' : '1';
-        bot.style.transform = open ? 'translateY(-8px) rotate(-45deg)' : 'none';
+        const curve = getBezierCSS();
+        l1.style.transition = `transform ${dur} ${curve}`;
+        l2.style.transition = `opacity ${dur} ${curve}`;
+        l3.style.transition = `transform ${dur} ${curve}`;
+
+        if (open) {
+          l1.style.transform = 'translateY(12px) rotate(45deg)';
+          l2.style.opacity = '0';
+          l3.style.transform = 'translateY(-12px) rotate(-45deg)';
+        } else {
+          l1.style.transform = 'none';
+          l2.style.opacity = '1';
+          l3.style.transform = 'none';
+        }
+        playTone(open ? 800 : 550, 0.04);
       }
+
       btn.onclick = toggle;
       return toggle;
     }
 
-    function getExportSvgHamburger() {
-      return `.open .bar-top { transform: translateY(8px) rotate(45deg); }
-.open .bar-mid { opacity: 0; }
-.open .bar-bot { transform: translateY(-8px) rotate(-45deg); }`;
+    function getExportSvgHamburger(fmt, s) {
+      return `.line-1.open { transform: translateY(12px) rotate(45deg); }
+.line-2.open { opacity: 0; }
+.line-3.open { transform: translateY(-12px) rotate(-45deg); }
+.line { transition: all ${s.duration}ms ${getBezierCSS()}; }`;
     }
 
-    // 5-3. METABALL LIQUID (Fixed Interval Leak)
+    // 5-3. METABALL LIQUID
     function renderMetaballLiquid(container) {
       container.innerHTML = `
-        <div class="metaball-container relative w-64 h-36 bg-dark-950 rounded-2xl flex items-center justify-center overflow-hidden border border-white/10 cursor-pointer">
-          <div class="w-14 h-14 rounded-full bg-accent-500 absolute"></div>
-          <div class="meta-drop w-12 h-12 rounded-full bg-accent-cyan absolute transition-transform duration-1000 ease-in-out" style="transform: translateX(-48px);"></div>
+        <div class="flex flex-col items-center justify-center p-4">
+          <div class="metaball-container relative w-64 h-36 bg-dark-950 rounded-2xl flex items-center justify-center overflow-hidden border border-white/5">
+            <div class="meta-1 absolute w-14 h-14 rounded-full bg-accent-cyan transition-transform duration-75"></div>
+            <div class="meta-2 absolute w-14 h-14 rounded-full bg-accent-cyan transition-transform duration-75"></div>
+          </div>
+          <span class="text-xs text-slate-400 mt-3 font-mono">feColorMatrix 표면장력 메타볼</span>
         </div>
       `;
-      const drop = container.querySelector('.meta-drop');
-      let dir = 1;
+      const m1 = container.querySelector('.meta-1');
+      const m2 = container.querySelector('.meta-2');
+      let t = 0;
+      let intervalId = null;
 
-      function step() {
-        dir *= -1;
-        drop.style.transitionDuration = `${STATE.duration / timeScale}ms`;
-        drop.style.transform = `translateX(${dir * 48}px)`;
+      function animateLoop() {
+        t += 0.04 * timeScale;
+        const dist = Math.sin(t) * 45;
+        m1.style.transform = `translateX(${dist}px)`;
+        m2.style.transform = `translateX(${-dist}px)`;
       }
 
-      const timer = setInterval(step, (STATE.duration + 200) / timeScale);
-      registerCleanup(() => clearInterval(timer));
-      container.firstElementChild.onclick = step;
-      return step;
+      intervalId = setInterval(animateLoop, 16);
+      registerCleanup(() => clearInterval(intervalId));
+
+      return () => { t = 0; };
     }
 
     function getExportMetaballLiquid() {
-      return `/* SVG Gooey Filter */
-.metaball-stage { filter: url('#metaball-filter'); }`;
+      return `<svg>
+  <filter id="goo">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
+    <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 21 -9" />
+  </filter>
+</svg>`;
     }
 
     // 6-1. SCRAMBLE DECODER
     function renderScrambleDecoder(container) {
       container.innerHTML = `
-        <div class="flex flex-col items-center justify-center p-6 bg-dark-950/70 rounded-2xl border border-white/10">
-          <div class="scramble-txt font-mono text-xl sm:text-2xl font-bold text-accent-cyan tracking-wider text-center">
-            MOTION OS READY
+        <div class="flex flex-col items-center justify-center p-5 bg-dark-950 rounded-2xl border border-white/10 w-full max-w-md">
+          <div class="text-[10px] font-mono text-cyan-400 mb-2">CIPHER PROTOCOL</div>
+          <div class="scramble-text font-mono font-bold text-lg sm:text-2xl text-emerald-400 text-center tracking-wider min-h-[36px]">
+            SYSTEM READY
           </div>
-          <button class="scramble-btn mt-4 px-4 py-1.5 rounded-lg bg-accent-cyan/20 text-cyan-300 border border-cyan-500/30 text-xs font-mono">
-            디코딩 재실행
-          </button>
+          <span class="text-xs text-slate-400 mt-3">글리프 난수 회전 &rarr; 순차 해독</span>
         </div>
       `;
-      const el = container.querySelector('.scramble-txt');
-      const btn = container.querySelector('.scramble-btn');
+      const textEl = container.querySelector('.scramble-text');
+      const target = "QUANTUM SECURITY CLEARED";
+      const glyphs = "!<>-_\\/[]{}—=+*^?#________ABCDEF0123456789";
       let timer = null;
 
-      function trigger() {
-        clearInterval(timer);
-        const target = "INTERACTIVE WEB 2026";
-        const glyphs = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789@#$%&*";
-        let iter = 0;
+      function runDecode() {
+        clearTimeout(timer);
+        let frame = 0;
+        const totalFrames = Math.round((STATE.duration / timeScale) / 30);
 
-        timer = setInterval(() => {
-          el.innerText = target.split('').map((c, i) => {
-            if (c === ' ') return ' ';
-            if (i < iter) return target[i];
-            return glyphs[Math.floor(Math.random() * glyphs.length)];
-          }).join('');
+        function step() {
+          let output = '';
+          const completeCount = Math.floor((frame / totalFrames) * target.length);
 
-          if (iter >= target.length) clearInterval(timer);
-          iter += 0.4 * timeScale;
-        }, 30);
+          for (let i = 0; i < target.length; i++) {
+            if (i < completeCount) {
+              output += target[i];
+            } else if (target[i] === ' ') {
+              output += ' ';
+            } else {
+              output += glyphs[Math.floor(Math.random() * glyphs.length)];
+            }
+          }
+
+          textEl.innerText = output;
+          frame++;
+
+          if (frame <= totalFrames) {
+            timer = setTimeout(step, 30);
+          } else {
+            textEl.innerText = target;
+            playTone(1100, 0.05, 'triangle');
+          }
+        }
+        step();
       }
 
-      btn.onclick = trigger;
-      registerCleanup(() => clearInterval(timer));
-      trigger();
-      return trigger;
+      registerCleanup(() => clearTimeout(timer));
+      runDecode();
+      return runDecode;
     }
 
     function getExportScrambleDecoder() {
-      return `const glyphs = "ABCDEF0123456789!@#$%";
-el.innerText = target.split('').map((c, i) =>
-  i < iter ? c : glyphs[Math.floor(Math.random() * glyphs.length)]
-).join('');`;
+      return `function scramble(el, text, duration) {
+  let frame = 0, total = duration / 30;
+  function step() {
+    const solved = Math.floor((frame / total) * text.length);
+    el.innerText = text.slice(0, solved) + randomChars(text.length - solved);
+    if (frame++ < total) setTimeout(step, 30);
+  }
+  step();
+}`;
     }
 
-    // 6-2. VARIABLE FONT WAVE (Animated Wave + Slider)
+    // 6-2. VARIABLE FONT WAVE
     function renderVariableFontWave(container) {
-      const word = "KINETIC";
+      const phrase = "KINETIC TYPOGRAPHY";
       container.innerHTML = `
-        <div class="flex flex-col items-center justify-center space-y-4">
-          <div class="var-word flex gap-1 text-3xl sm:text-5xl font-sans tracking-tight text-white">
-            ${word.split('').map(ch => `<span class="var-ch inline-block transition-transform duration-75">${ch}</span>`).join('')}
+        <div class="flex flex-col items-center justify-center p-4">
+          <div class="font-wave-box flex flex-wrap justify-center gap-1 font-display text-xl sm:text-3xl text-white select-none">
+            ${phrase.split('').map(ch => `<span class="wave-char transition-all duration-75 inline-block">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('')}
           </div>
-          <span class="text-xs text-slate-400">실시간 사인파(Sine) 웨이트 & 스케일 물결</span>
+          <span class="text-xs text-slate-400 mt-4 font-mono">가변 폰트 굵기(Weight) 사인파 웨이브</span>
         </div>
       `;
-      const chars = container.querySelectorAll('.var-ch');
-      let rafId = null;
-      let phase = 0;
+      const chars = container.querySelectorAll('.wave-char');
+      let offset = 0;
+      let intervalId = null;
 
       function loop() {
-        phase += 0.08 * timeScale;
-        chars.forEach((span, idx) => {
-          const s = (Math.sin(phase - idx * 0.6) + 1) / 2; // 0 to 1
-          const weight = Math.round(200 + s * 700);
-          span.style.fontWeight = weight;
-          span.style.transform = `translateY(${(0.5 - s) * 10}px) scale(${0.9 + s * 0.25})`;
-          span.style.color = s > 0.6 ? '#818cf8' : '#ffffff';
+        offset += 0.12 * timeScale;
+        chars.forEach((c, i) => {
+          const w = 300 + Math.sin(offset + i * 0.4) * 500;
+          c.style.fontWeight = Math.round(w);
+          c.style.transform = `scaleY(${0.85 + (w / 800) * 0.35})`;
         });
-        rafId = requestAnimationFrame(loop);
       }
 
-      registerCleanup(() => cancelAnimationFrame(rafId));
-      loop();
-      return () => { phase = 0; };
+      intervalId = setInterval(loop, 25);
+      registerCleanup(() => clearInterval(intervalId));
+
+      return () => { offset = 0; };
     }
 
     function getExportVariableFontWave() {
-      return `chars.forEach((span, idx) => {
-  const s = (Math.sin(time - idx * 0.6) + 1) / 2;
-  span.style.fontWeight = Math.round(200 + s * 700);
+      return `chars.forEach((char, i) => {
+  const weight = 300 + Math.sin(t + i * 0.4) * 500;
+  char.style.fontVariationSettings = \`'wght' \${weight}\`;
 });`;
     }
 
     // 6-3. STAGGER SPLIT CASCADE
     function renderStaggerSplitCascade(container) {
+      const words = "SMOOTH MOTION REVEAL".split('');
       container.innerHTML = `
-        <div class="flex flex-col items-center justify-center">
-          <div class="stagger-box flex flex-wrap justify-center gap-1 text-2xl sm:text-3xl font-display font-extrabold text-white"></div>
+        <div class="flex flex-col items-center justify-center p-4">
+          <div class="stagger-box flex flex-wrap justify-center overflow-hidden font-display font-extrabold text-2xl sm:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-accent-cyan">
+            ${words.map(ch => `<span class="stagger-ch inline-block transform translate-y-16 transition-transform">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('')}
+          </div>
+          <span class="text-xs text-slate-400 mt-4">단어별 35ms 딜레이 시차(Stagger)</span>
         </div>
       `;
-      const box = container.querySelector('.stagger-box');
+      const chars = container.querySelectorAll('.stagger-ch');
 
       function trigger() {
-        box.innerHTML = '';
-        const text = "SMOOTH STAGGER";
-        text.split('').forEach((char, i) => {
-          const span = document.createElement('span');
-          span.innerText = char === ' ' ? '\u00A0' : char;
-          span.style.opacity = '0';
-          span.style.transform = 'translateY(22px) rotateX(-60deg)';
-          span.style.transition = `all ${(STATE.duration * 0.5) / timeScale}ms ${getBezierCSS()} ${(i * 35) / timeScale}ms`;
-          box.appendChild(span);
-
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              span.style.opacity = '1';
-              span.style.transform = 'translateY(0px) rotateX(0deg)';
-            });
-          });
+        chars.forEach((c, i) => {
+          c.style.transition = 'none';
+          c.style.transform = 'translateY(60px)';
+          setTimeout(() => {
+            c.style.transition = `transform ${STATE.duration / timeScale}ms ${getBezierCSS()}`;
+            c.style.transform = 'translateY(0px)';
+          }, i * 35);
         });
       }
 
@@ -2729,172 +3834,203 @@ el.innerText = target.split('').map((c, i) =>
     }
 
     function getExportStaggerSplitCascade(fmt, s) {
-      return `text.split('').forEach((ch, i) => {
-  span.style.transition = \`all ${s.duration}ms ${getBezierCSS()} \${i * 35}ms\`;
+      return `chars.forEach((c, i) => {
+  c.style.transition = 'transform ${s.duration}ms ${getBezierCSS()}';
+  c.style.transitionDelay = \`\${i * 35}ms\`;
+  c.style.transform = 'translateY(0)';
 });`;
     }
 
-    // 7-1. CANVAS PARTICLE REPEL (Touch + Mouse + Lifecycle Cleanup)
+    // 7-1. CANVAS PARTICLE REPEL
     function renderCanvasParticleRepel(container) {
       container.innerHTML = `
-        <div class="relative w-full max-w-sm h-52 rounded-2xl bg-dark-950 border border-white/10 overflow-hidden flex items-center justify-center">
-          <canvas width="340" height="208" class="repel-canvas w-full h-full cursor-pointer touch-none-drag"></canvas>
+        <div class="relative w-full max-w-md h-64 rounded-2xl bg-dark-950 border border-white/10 overflow-hidden flex items-center justify-center">
+          <canvas class="particle-canvas w-full h-full cursor-crosshair touch-none-drag"></canvas>
         </div>
       `;
-      const canvas = container.querySelector('.repel-canvas');
+      const canvas = container.querySelector('.particle-canvas');
       const ctx = canvas.getContext('2d');
-      const dots = [];
-      let rafId = null;
+      canvas.width = canvas.clientWidth || 360;
+      canvas.height = canvas.clientHeight || 256;
 
-      for (let x = 28; x < canvas.width; x += 28) {
-        for (let y = 26; y < canvas.height; y += 26) {
-          dots.push({ origX: x, origY: y, x, y, vx: 0, vy: 0 });
-        }
+      const particles = [];
+      for (let i = 0; i < 45; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          ox: Math.random() * canvas.width,
+          oy: Math.random() * canvas.height,
+          vx: 0,
+          vy: 0
+        });
       }
 
-      let pointer = { x: -999, y: -999 };
-      canvas.addEventListener('pointermove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        pointer.x = (e.clientX - rect.left) * (canvas.width / rect.width);
-        pointer.y = (e.clientY - rect.top) * (canvas.height / rect.height);
-      });
-      canvas.addEventListener('pointerleave', () => { pointer.x = -999; pointer.y = -999; });
+      let mx = -999, my = -999;
+      let animId = null;
 
-      function loop() {
+      function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        dots.forEach(d => {
-          const dx = pointer.x - d.x;
-          const dy = pointer.y - d.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < 65) {
-            const angle = Math.atan2(dy, dx);
-            const force = (65 - dist) / 65;
-            d.vx -= Math.cos(angle) * force * 4;
-            d.vy -= Math.sin(angle) * force * 4;
-          }
-          d.vx += (d.origX - d.x) * 0.08;
-          d.vy += (d.origY - d.y) * 0.08;
-          d.vx *= 0.85;
-          d.vy *= 0.85;
-          d.x += d.vx;
-          d.y += d.vy;
 
+        particles.forEach(p => {
+          const dx = p.x - mx;
+          const dy = p.y - my;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < 90) {
+            const force = (1 - dist / 90) * 8;
+            p.vx += (dx / dist) * force;
+            p.vy += (dy / dist) * force;
+          }
+
+          // Spring back to origin
+          p.vx += (p.ox - p.x) * 0.05;
+          p.vy += (p.oy - p.y) * 0.05;
+          p.vx *= 0.88;
+          p.vy *= 0.88;
+
+          p.x += p.vx;
+          p.y += p.vy;
+
+          ctx.fillStyle = '#6366f1';
           ctx.beginPath();
-          ctx.arc(d.x, d.y, 3, 0, Math.PI * 2);
-          ctx.fillStyle = dist < 65 ? '#06b6d4' : '#6366f1';
+          ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
           ctx.fill();
         });
-        rafId = requestAnimationFrame(loop);
+
+        animId = requestAnimationFrame(render);
       }
 
-      registerCleanup(() => cancelAnimationFrame(rafId));
-      loop();
+      function onMove(e) {
+        const rect = canvas.getBoundingClientRect();
+        mx = e.clientX - rect.left;
+        my = e.clientY - rect.top;
+      }
+      function onLeave() { mx = -999; my = -999; }
+
+      canvas.addEventListener('pointermove', onMove);
+      canvas.addEventListener('pointerleave', onLeave);
+
+      animId = requestAnimationFrame(render);
+      registerCleanup(() => {
+        if (animId) cancelAnimationFrame(animId);
+      });
 
       return () => {
-        dots.forEach(d => {
-          d.vx = (Math.random() - 0.5) * 18;
-          d.vy = (Math.random() - 0.5) * 18;
+        particles.forEach(p => {
+          p.vx = (Math.random() - 0.5) * 20;
+          p.vy = (Math.random() - 0.5) * 20;
         });
       };
     }
 
     function getExportCanvasParticleRepel() {
-      return `const dist = Math.hypot(pointer.x - d.x, pointer.y - d.y);
-if (dist < 65) {
-  d.vx -= Math.cos(angle) * 4;
-  d.vy -= Math.sin(angle) * 4;
+      return `/* Canvas Repel Physics */
+const dist = Math.hypot(p.x - mx, p.y - my);
+if (dist < repelRadius) {
+  p.vx += (dx / dist) * force;
 }
-d.vx += (d.origX - d.x) * 0.08;`;
+p.vx += (p.originX - p.x) * springK;
+p.x += (p.vx *= damping);`;
     }
 
     // 7-2. NEON BURST SHOCKWAVE
     function renderNeonBurst(container) {
       container.innerHTML = `
-        <div class="burst-stage relative w-full max-w-sm h-52 rounded-2xl bg-dark-950 border border-white/10 overflow-hidden flex items-center justify-center cursor-pointer">
-          <button class="px-5 py-2.5 rounded-xl bg-accent-pink text-white font-bold text-xs shadow-xl pointer-events-none">
-            터치/클릭 지점 폭죽 버스트!
-          </button>
+        <div class="burst-arena touch-none-drag relative w-full max-w-md h-60 rounded-2xl bg-dark-950 border border-white/10 overflow-hidden flex items-center justify-center cursor-pointer select-none">
+          <div class="text-xs text-slate-400 font-mono pointer-events-none">
+            화면 아무 곳이나 탭하여 충격파 폭발
+          </div>
         </div>
       `;
-      const stage = container.querySelector('.burst-stage');
+      const arena = container.querySelector('.burst-arena');
 
       function spawnBurst(cx, cy) {
-        const colors = ['#ec4899', '#6366f1', '#06b6d4', '#10b981', '#f59e0b'];
-        for (let i = 0; i < 28; i++) {
-          const p = document.createElement('div');
-          const size = Math.random() * 6 + 4;
-          const color = colors[i % colors.length];
-          const angle = (Math.PI * 2 * i) / 28 + (Math.random() * 0.3);
-          const dist = Math.random() * 80 + 35;
+        // Shockwave ring
+        const ring = document.createElement('div');
+        ring.className = 'absolute rounded-full border border-cyan-400 pointer-events-none transition-all duration-500 ease-out';
+        ring.style.left = `${cx}px`;
+        ring.style.top = `${cy}px`;
+        ring.style.width = '10px';
+        ring.style.height = '10px';
+        ring.style.transform = 'translate(-50%, -50%) scale(1)';
+        arena.appendChild(ring);
 
-          p.style.cssText = `
-            position: absolute; left: ${cx}px; top: ${cy}px;
-            width: ${size}px; height: ${size}px; border-radius: 9999px;
-            background: ${color}; pointer-events: none;
-            transform: translate(-50%, -50%) scale(1);
-            transition: all ${(STATE.duration * 0.6) / timeScale}ms ${getBezierCSS()};
-          `;
-          stage.appendChild(p);
+        requestAnimationFrame(() => {
+          ring.style.transform = 'translate(-50%, -50%) scale(22)';
+          ring.style.opacity = '0';
+        });
+
+        // Sparks
+        for (let i = 0; i < 18; i++) {
+          const spark = document.createElement('div');
+          const angle = (Math.PI * 2 * i) / 18;
+          const dist = 60 + Math.random() * 50;
+          spark.className = 'absolute w-1.5 h-1.5 rounded-full bg-accent-pink pointer-events-none transition-all duration-500 ease-out';
+          spark.style.left = `${cx}px`;
+          spark.style.top = `${cy}px`;
+          spark.style.transform = 'translate(-50%, -50%) scale(1)';
+          arena.appendChild(spark);
 
           requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              p.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) scale(0)`;
-              p.style.opacity = '0';
-            });
+            spark.style.transform = `translate(${Math.cos(angle) * dist - 3}px, ${Math.sin(angle) * dist - 3}px) scale(0)`;
+            spark.style.opacity = '0';
           });
-          setTimeout(() => p.remove(), (STATE.duration * 0.65) / timeScale);
+
+          setTimeout(() => spark.remove(), 600);
         }
-        playTone(950, 0.06, 'triangle');
+        setTimeout(() => ring.remove(), 600);
+        playTone(950, 0.05, 'sawtooth');
       }
 
-      stage.addEventListener('pointerdown', (e) => {
-        const rect = stage.getBoundingClientRect();
+      arena.addEventListener('pointerdown', (e) => {
+        const rect = arena.getBoundingClientRect();
         spawnBurst(e.clientX - rect.left, e.clientY - rect.top);
       });
 
-      return () => spawnBurst(stage.clientWidth / 2, stage.clientHeight / 2);
+      return () => {
+        spawnBurst(arena.clientWidth / 2, arena.clientHeight / 2);
+      };
     }
 
-    function getExportNeonBurst(fmt, s) {
-      return `dot.style.transition = 'all ${s.duration}ms ${getBezierCSS()}';
-dot.style.transform = \`translate(\${Math.cos(angle) * dist}px, \${Math.sin(angle) * dist}px) scale(0)\`;`;
+    function getExportNeonBurst() {
+      return `/* Particle Burst on Click */
+for(let i=0; i<count; i++) {
+  const angle = (Math.PI * 2 * i) / count;
+  spark.animate([
+    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+    { transform: \`translate(\${Math.cos(angle)*dist}px, \${Math.sin(angle)*dist}px) scale(0)\`, opacity: 0 }
+  ], { duration: 600, easing: 'ease-out' });
+}`;
     }
 
     // 8-1. RADIAL WIPE
     function renderRadialWipe(container) {
       container.innerHTML = `
-        <div class="wipe-stage relative w-full max-w-sm h-48 rounded-2xl bg-dark-900 border border-white/10 overflow-hidden flex items-center justify-center cursor-pointer">
-          <div class="wipe-layer absolute inset-0 bg-gradient-to-tr from-accent-600 via-indigo-600 to-accent-cyan flex items-center justify-center text-white font-bold text-xs" style="clip-path: circle(0% at 50% 50%);">
-            방사형 서클 와이프 전환 완료!
+        <div class="relative w-full max-w-sm h-56 rounded-2xl overflow-hidden border border-white/10 select-none">
+          <div class="absolute inset-0 bg-dark-900 p-6 flex flex-col justify-between">
+            <span class="text-xs font-mono text-slate-400">PAGE 01</span>
+            <h3 class="text-lg font-bold text-white">첫 번째 뷰포트</h3>
+            <span class="text-[10px] text-slate-500">방사형 마스크 서클 와이프</span>
           </div>
-          <span class="px-4 py-2 rounded-xl bg-dark-800 border border-white/10 text-white font-semibold text-xs relative z-10 pointer-events-none">
-            화면을 터치하여 원형 와이프
-          </span>
+          <div class="wipe-layer absolute inset-0 bg-gradient-to-tr from-accent-600 via-indigo-600 to-accent-cyan p-6 flex flex-col justify-between" style="clip-path: circle(0% at 50% 50%); transition: clip-path 0.8s;">
+            <span class="text-xs font-mono text-cyan-200">PAGE 02</span>
+            <h3 class="text-lg font-bold text-white">두 번째 뷰포트 도달</h3>
+            <span class="text-[10px] text-indigo-200">clip-path: circle(150% at 50% 50%)</span>
+          </div>
         </div>
       `;
-      const stage = container.querySelector('.wipe-stage');
       const layer = container.querySelector('.wipe-layer');
       let open = false;
 
-      function trigger(cx = '50%', cy = '50%') {
+      function toggle() {
         open = !open;
         layer.style.transition = `clip-path ${STATE.duration / timeScale}ms ${getBezierCSS()}`;
-        layer.style.clipPath = open ? `circle(150% at ${cx} ${cy})` : `circle(0% at ${cx} ${cy})`;
+        layer.style.clipPath = open ? 'circle(150% at 50% 50%)' : 'circle(0% at 50% 50%)';
+        playTone(open ? 850 : 600, 0.05);
       }
 
-      stage.addEventListener('pointerdown', (e) => {
-        const rect = stage.getBoundingClientRect();
-        const xPct = `${Math.round(((e.clientX - rect.left) / rect.width) * 100)}%`;
-        const yPct = `${Math.round(((e.clientY - rect.top) / rect.height) * 100)}%`;
-        trigger(xPct, yPct);
-      });
-
-      activeScrubHandler = (p) => {
-        layer.style.transition = 'none';
-        layer.style.clipPath = `circle(${p * 140}% at 50% 50%)`;
-      };
-
-      return () => trigger('50%', '50%');
+      container.onclick = toggle;
+      return toggle;
     }
 
     function getExportRadialWipe(fmt, s) {
@@ -2902,77 +4038,75 @@ dot.style.transform = \`translate(\${Math.cos(angle) * dist}px, \${Math.sin(angl
   clip-path: circle(0% at 50% 50%);
   transition: clip-path ${s.duration}ms ${getBezierCSS()};
 }
-.wipe-layer.open {
+.wipe-active {
   clip-path: circle(150% at 50% 50%);
 }`;
     }
 
-    // 8-2. 3D ROOM FLIP (Fixed Backface Mirroring Bug with Real Two-Sided 3D Card)
+    // 8-2. 3D ROOM FLIP (Front & Back Face)
     function renderRoom3DFlip(container) {
       container.innerHTML = `
-        <div class="perspective-1000 w-64 h-40 cursor-pointer">
-          <div class="cube-inner preserve-3d relative w-full h-full transition-transform duration-700">
+        <div class="perspective-1000 w-full max-w-sm h-56 flex items-center justify-center select-none">
+          <div class="room-card preserve-3d relative w-64 h-40 transition-transform duration-700 cursor-pointer">
             <!-- Front Face -->
-            <div class="backface-hidden absolute inset-0 rounded-2xl bg-gradient-to-tr from-indigo-700 to-accent-600 p-5 flex flex-col justify-between text-white shadow-2xl border border-white/15">
-              <div class="flex justify-between items-center">
-                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-black/20">FRONT ROOM 01</span>
-                <i data-lucide="rotate-3d" class="w-4 h-4"></i>
-              </div>
-              <div>
-                <h4 class="font-bold text-sm">3D 공간 전면 뷰</h4>
-                <p class="text-[11px] text-indigo-100 mt-0.5">터치하면 뒷면 공간으로 회전</p>
-              </div>
+            <div class="backface-hidden absolute inset-0 rounded-2xl bg-gradient-to-tr from-indigo-900 to-dark-900 border border-indigo-500/40 p-5 flex flex-col justify-between shadow-2xl">
+              <span class="text-xs font-mono text-indigo-400 font-bold">FRONT SIDE</span>
+              <div class="text-sm font-bold text-white">앞면 인터랙션 카드</div>
+              <span class="text-[10px] text-slate-400 font-mono">터치 시 180도 회전 &rarr;</span>
             </div>
-            <!-- Back Face (Pre-rotated 180deg so text is never mirrored!) -->
-            <div class="backface-hidden rotate-y-180 absolute inset-0 rounded-2xl bg-gradient-to-tr from-emerald-700 to-accent-cyan p-5 flex flex-col justify-between text-white shadow-2xl border border-white/15">
-              <div class="flex justify-between items-center">
-                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-black/20">BACK ROOM 02</span>
-                <i data-lucide="Sparkles" class="w-4 h-4"></i>
-              </div>
-              <div>
-                <h4 class="font-bold text-sm">3D 공간 후면 뷰</h4>
-                <p class="text-[11px] text-emerald-100 mt-0.5">글자 반전 없이 완벽한 양면 전환</p>
-              </div>
+            <!-- Back Face (rotated 180deg) -->
+            <div class="backface-hidden rotate-y-180 absolute inset-0 rounded-2xl bg-gradient-to-tr from-pink-900 to-dark-900 border border-pink-500/40 p-5 flex flex-col justify-between shadow-2xl">
+              <span class="text-xs font-mono text-pink-400 font-bold">BACK SIDE</span>
+              <div class="text-sm font-bold text-white">뒷면 세부 정보 뷰</div>
+              <span class="text-[10px] text-slate-400 font-mono">&larr; 다시 터치하여 복귀</span>
             </div>
           </div>
         </div>
       `;
-      const inner = container.querySelector('.cube-inner');
+      const card = container.querySelector('.room-card');
       let flipped = false;
 
       function toggle() {
         flipped = !flipped;
-        inner.style.transitionDuration = `${STATE.duration / timeScale}ms`;
-        inner.style.transitionTimingFunction = getBezierCSS();
-        inner.style.transform = flipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+        card.style.transition = `transform ${STATE.duration / timeScale}ms ${getBezierCSS()}`;
+        card.style.transform = flipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+        playTone(flipped ? 900 : 700, 0.05);
       }
 
-      container.firstElementChild.onclick = toggle;
-      activeScrubHandler = (p) => {
-        inner.style.transition = 'none';
-        inner.style.transform = `rotateY(${p * 180}deg)`;
-      };
+      card.onclick = toggle;
       return toggle;
     }
 
     function getExportRoom3DFlip(fmt, s) {
-      return `.card-3d {
+      return `.card-container { perspective: 1000px; }
+.card {
   transform-style: preserve-3d;
   transition: transform ${s.duration}ms ${getBezierCSS()};
 }
+.card.flipped { transform: rotateY(180deg); }
 .face { backface-visibility: hidden; }
-.face-back { transform: rotateY(180deg); }`;
+.back { transform: rotateY(180deg); }`;
     }
 
     /* ======================================================== */
-    /* 13. MASTER BOOTSTRAP INITIALIZATION                      */
+    /* 13. BOOTSTRAP ON LOAD & RESIZE                           */
     /* ======================================================== */
-    window.onload = function () {
+    function initializeApp() {
       buildDomainNavTree();
       selectAnimation('smooth-counter');
       drawBezierInspectors();
       lucide.createIcons();
-    };
+    }
+
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+      initializeApp();
+    }
+
+    window.addEventListener('resize', () => {
+      drawBezierInspectors();
+    });
   </script>
 </body>
 </html>
